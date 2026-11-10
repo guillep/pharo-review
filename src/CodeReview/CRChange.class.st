@@ -74,6 +74,19 @@ CRChange >> description [
 ]
 
 { #category : 'accessing' }
+CRChange >> imageClass [
+	"The class I change, as the image has it now; nil for a file or a class the image does not have"
+
+	| class |
+	className ifNil: [ ^ nil ].
+	class := Smalltalk globals classNamed: (className copyReplaceAll: ' class' with: '').
+	class ifNil: [ ^ nil ].
+	^ (className endsWith: ' class')
+		  ifTrue: [ class class ]
+		  ifFalse: [ class ]
+]
+
+{ #category : 'accessing' }
 CRChange >> isBrowsable [
 
 	^ self isFile not

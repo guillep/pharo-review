@@ -11,11 +11,11 @@ Class {
 		'current',
 		'tree',
 		'summary',
-		'diff',
 		'reviewedCheckBox',
 		'note',
 		'browseButton',
-		'exportButton'
+		'exportButton',
+		'changeView'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -26,22 +26,17 @@ CRReviewPresenter >> browseCurrent [
 	"Browse the changed method, or the changed class when the method is gone"
 
 	| class |
-	class := self classOf: current.
+	class := current imageClass.
 	class ifNil: [ ^ self inform: current name , ' is not in the image' ].
 	(current isMethod and: [ class includesSelector: current selector asSymbol ])
 		ifTrue: [ (class >> current selector asSymbol) browse ]
 		ifFalse: [ class browse ]
 ]
 
-{ #category : 'actions' }
-CRReviewPresenter >> classOf: aChange [
+{ #category : 'accessing - tests' }
+CRReviewPresenter >> changeView [
 
-	| class |
-	class := Smalltalk globals classNamed: (aChange className copyReplaceAll: ' class' with: '').
-	class ifNil: [ ^ nil ].
-	^ (aChange className endsWith: ' class')
-		  ifTrue: [ class class ]
-		  ifFalse: [ class ]
+^ changeView
 ]
 
 { #category : 'initialization' }
@@ -55,7 +50,7 @@ CRReviewPresenter >> defaultLayout [
 				   add: (SpPanedLayout newTopToBottom
 						    positionOfSlider: 0.3;
 						    add: summary;
-						    add: diff;
+						    add: changeView;
 						    yourself);
 				   add: (SpBoxLayout newTopToBottom
 						    add: (SpBoxLayout newLeftToRight
@@ -70,12 +65,6 @@ CRReviewPresenter >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'accessing - tests' }
-CRReviewPresenter >> diff [
-
-	^ diff
-]
-
 { #category : 'actions' }
 CRReviewPresenter >> export [
 
@@ -88,8 +77,7 @@ CRReviewPresenter >> iconFor: anItem [
 	"Added, removed or changed, for a change; none for a part"
 
 	anItem isChange ifFalse: [ ^ nil ].
-	^ self iconNamed:
-		  ((Dictionary newFromPairs: #( #added #changeAdd #removed #changeRemove #changed #changeUpdate )) at: anItem kind)
+	^ self iconNamed: (CRChangePresenter iconNameFor: anItem kind)
 ]
 
 { #category : 'initialization' }
@@ -106,7 +94,7 @@ CRReviewPresenter >> initializePresenters [
 	summary := self newText
 		           beNotEditable;
 		           yourself.
-	diff := self newDiff.
+	changeView := self instantiate: CRChangePresenter.
 	reviewedCheckBox := self newCheckBox
 		                    label: 'Reviewed';
 		                    whenChangedDo: [ :value | self markReviewed: value ];
@@ -205,13 +193,11 @@ CRReviewPresenter >> setModelBeforeInitialization: aReview [
 
 { #category : 'actions' }
 CRReviewPresenter >> show: anItemOrNil [
-	"Show anItemOrNil on the right: what it is, and its diff when it is a change"
+	"Show anItemOrNil on the right: what it is and why, and the change itself"
 
 	current := nil.
 	summary text: (anItemOrNil ifNil: [ review title ] ifNotNil: [ :item | item description ]).
-	diff
-		leftText: (anItemOrNil ifNil: [ '' ] ifNotNil: [ :item | item oldSource ]);
-		rightText: (anItemOrNil ifNil: [ '' ] ifNotNil: [ :item | item newSource ]).
+	changeView change: anItemOrNil.
 	reviewedCheckBox
 		state: (anItemOrNil isNotNil and: [ anItemOrNil isReviewed ]);
 		enabled: anItemOrNil isNotNil.
