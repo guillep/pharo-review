@@ -156,14 +156,20 @@ CRPart >> setName: aName summary: aString [
 	children := OrderedCollection new
 ]
 
-{ #category : 'accessing' }
+{ #category : 'filtering' }
 CRPart >> sizeLabel [
+
+	^ self sizeLabelShowing: [ :each | true ]
+]
+
+{ #category : 'filtering' }
+CRPart >> sizeLabelShowing: aBlock [
 
 	^ String streamContents: [ :stream |
 			  stream
-				  print: children size;
+				  print: (self childrenShowing: aBlock) size;
 				  nextPutAll: ' items, ';
-				  print: self lineCount;
+				  print: (self lineCountShowing: aBlock);
 				  nextPutAll: ' lines' ]
 ]
 

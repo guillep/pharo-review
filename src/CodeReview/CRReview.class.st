@@ -15,7 +15,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'root',
-		'changes'
+		'changes',
+		'vocabulary'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -78,6 +79,21 @@ CRReview >> checkComplete [
 
 	self unfiled ifNotEmpty: [ :missing | ^ self error: missing size printString , ' changes are in no part (see unfiled)' ].
 	self emptyParts ifNotEmpty: [ :empty | ^ self error: empty size printString , ' parts are empty (see emptyParts)' ]
+]
+
+{ #category : 'vocabulary' }
+CRReview >> computeVocabulary [
+
+	| byWord base |
+	byWord := Dictionary new.
+	changes do: [ :change |
+		change addedWords asSet do: [ :word | (byWord at: word ifAbsentPut: [ OrderedCollection new ]) add: change ] ].
+	base := self wordsBefore.
+	^ (byWord associations collect: [ :each | CRWord word: each key new: (base includes: each key) not changes: each value asArray ])
+		  asSortedCollection: [ :a :b |
+				  a isNew = b isNew
+					  ifTrue: [ a word <= b word ]
+					  ifFalse: [ a isNew ] ]
 ]
 
 { #category : 'accessing' }
@@ -231,4 +247,27 @@ CRReview >> unfiled [
 	| filed |
 	filed := root allChanges asIdentitySet.
 	^ changes reject: [ :each | filed includes: each ]
+]
+
+{ #category : 'vocabulary' }
+CRReview >> vocabulary [
+	"One CRWord per word of the added code, with the changes that use it: the new words first, then the others, each alphabetically. Computed once"
+
+	^ vocabulary ifNil: [ vocabulary := self computeVocabulary ]
+]
+
+{ #category : 'vocabulary' }
+CRReview >> wordsBefore [
+	"The words of the code before the pull request: the old code of my changes, and every method of the packages they touch that they leave as it is (read from the image)"
+
+	| words changed |
+	words := Set new.
+	changes do: [ :each | words addAll: each oldWords ].
+	changed := (changes select: [ :each | each isMethod ]) collect: [ :each | each className -> each selector ] as: Set.
+	((changes collect: [ :each | each packageName ] as: Set) reject: [ :each | each isNil ]) do: [ :packageName |
+			(PackageOrganizer default packageNamed: packageName ifAbsent: [ nil ]) ifNotNil: [ :package |
+					package methods do: [ :method |
+							(changed includes: method methodClass name asString -> method selector) ifFalse: [
+								words addAll: (CRVocabulary wordsIn: method sourceCode) ] ] ] ].
+	^ words
 ]

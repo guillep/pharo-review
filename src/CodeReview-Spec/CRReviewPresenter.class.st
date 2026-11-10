@@ -15,7 +15,9 @@ Class {
 		'note',
 		'browseButton',
 		'exportButton',
-		'changeView'
+		'changeView',
+		'hideAccessorsCheckBox',
+		'groupByList'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -39,12 +41,19 @@ CRReviewPresenter >> changeView [
 ^ changeView
 ]
 
-{ #category : 'initialization' }
+{ #category : 'tree' }
 CRReviewPresenter >> defaultLayout [
 
 	^ SpPanedLayout newLeftToRight
 		  positionOfSlider: 0.35;
-		  add: tree;
+		  add: (SpBoxLayout newTopToBottom
+				   add: (SpBoxLayout newLeftToRight
+						    add: groupByList;
+						    addLast: hideAccessorsCheckBox expand: false;
+						    yourself)
+				   expand: false;
+				   add: tree;
+				   yourself);
 		  add: (SpPanedLayout newTopToBottom
 				   positionOfSlider: 0.75;
 				   add: (SpPanedLayout newTopToBottom
@@ -72,6 +81,27 @@ CRReviewPresenter >> export [
 	self inform: 'The review notes are in the clipboard'
 ]
 
+{ #category : 'tree' }
+CRReviewPresenter >> filter [
+	"Which changes the tree shows"
+
+	^ hideAccessorsCheckBox state
+		  ifTrue: [ [ :change | change isAccessor not ] ]
+		  ifFalse: [ [ :change | true ] ]
+]
+
+{ #category : 'tree' }
+CRReviewPresenter >> groupByList [
+
+	^ groupByList
+]
+
+{ #category : 'tree' }
+CRReviewPresenter >> hideAccessorsCheckBox [
+
+	^ hideAccessorsCheckBox
+]
+
 { #category : 'actions' }
 CRReviewPresenter >> iconFor: anItem [
 	"Moved, added, removed or changed, for a change; none for a part"
@@ -84,13 +114,21 @@ CRReviewPresenter >> iconFor: anItem [
 CRReviewPresenter >> initializePresenters [
 
 	tree := self newTree
-		        roots: review root children;
-		        children: [ :each | each children ];
+		        children: [ :each | each childrenShowing: self filter ];
 		        display: [ :each | self labelFor: each ];
 		        displayIcon: [ :each | self iconFor: each ];
 		        contextMenu: [ self reviewMenu ];
 		        whenSelectionChangedDo: [ :selection | self show: selection selectedItem ];
 		        yourself.
+	hideAccessorsCheckBox := self newCheckBox
+		                         label: 'Hide accessors';
+		                         whenChangedDo: [ self updateTree ];
+		                         yourself.
+	groupByList := self newDropList
+		               items: #( 'Parts' 'Vocabulary' );
+		               display: [ :each | 'Group by: ' , each ];
+		               whenSelectedItemChangedDo: [ self updateTree ];
+		               yourself.
 	summary := self newText
 		           beNotEditable;
 		           yourself.
@@ -111,7 +149,7 @@ CRReviewPresenter >> initializePresenters [
 		                label: 'Export';
 		                action: [ self export ];
 		                yourself.
-	self show: nil
+	self updateTree
 ]
 
 { #category : 'initialization' }
@@ -123,7 +161,7 @@ CRReviewPresenter >> initializeWindow: aWindowPresenter [
 		initialExtent: 1300 @ 850
 ]
 
-{ #category : 'actions' }
+{ #category : 'tree' }
 CRReviewPresenter >> labelFor: anItem [
 
 	^ String streamContents: [ :stream |
@@ -133,7 +171,7 @@ CRReviewPresenter >> labelFor: anItem [
 						   ifFalse: [ '   ' ]);
 				  nextPutAll: anItem title;
 				  nextPutAll: '  (';
-				  nextPutAll: anItem sizeLabel;
+				  nextPutAll: (anItem sizeLabelShowing: self filter);
 				  nextPutAll: ')'.
 			  anItem hasNote ifTrue: [ stream nextPutAll: '  ✎' ] ]
 ]
@@ -185,13 +223,24 @@ CRReviewPresenter >> reviewedCheckBox [
 	^ reviewedCheckBox
 ]
 
+{ #category : 'tree' }
+CRReviewPresenter >> roots [
+	"The parts of the review, or its words"
+
+	| roots |
+	roots := groupByList selectedItem = 'Vocabulary'
+		         ifTrue: [ review vocabulary ]
+		         ifFalse: [ review root children ].
+	^ roots select: [ :each | each shows: self filter ]
+]
+
 { #category : 'initialization' }
 CRReviewPresenter >> setModelBeforeInitialization: aReview [
 
 	review := aReview
 ]
 
-{ #category : 'actions' }
+{ #category : 'tree' }
 CRReviewPresenter >> show: anItemOrNil [
 	"Show anItemOrNil on the right: what it is and why, and the change itself"
 
@@ -203,7 +252,7 @@ CRReviewPresenter >> show: anItemOrNil [
 		enabled: anItemOrNil isNotNil.
 	note
 		text: (anItemOrNil ifNil: [ '' ] ifNotNil: [ :item | item note ]);
-		enabled: anItemOrNil isNotNil.
+		enabled: (anItemOrNil isNotNil and: [ anItemOrNil acceptsNote ]).
 	browseButton enabled: (anItemOrNil isNotNil and: [ anItemOrNil isBrowsable ]).
 	current := anItemOrNil
 ]
@@ -218,4 +267,12 @@ CRReviewPresenter >> summary [
 CRReviewPresenter >> tree [
 
 	^ tree
+]
+
+{ #category : 'tree' }
+CRReviewPresenter >> updateTree [
+	"Show the tree again after the filter or the grouping changed"
+
+	tree roots: self roots.
+	self show: nil
 ]

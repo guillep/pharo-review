@@ -97,6 +97,14 @@ CRReviewPresenterTest >> testARemovalShowsTheOldCode [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testAWordTakesNoNote [
+
+	presenter groupByList selectItem: 'Vocabulary'.
+	presenter tree selectPath: #( 1 ).
+	self deny: presenter note isEnabled
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testAnAdditionShowsItsCodeAlone [
 
 	| addition |
@@ -120,6 +128,39 @@ CRReviewPresenterTest >> testChangesHaveAnIconForTheirKind [
 	self
 		assert: (presenter iconFor: change) equals: (presenter iconNamed: #changeUpdate);
 		assert: (presenter iconFor: part) isNil
+]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> testGroupingByVocabularyShowsTheWords [
+
+	presenter groupByList selectItem: 'Vocabulary'.
+	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'new (new)' ).
+	presenter groupByList selectItem: 'Parts'.
+	self assert: presenter tree roots asArray equals: { part }
+]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> testHidingAccessorsHidesThePartsLeftEmpty [
+
+	| getter accessors |
+	getter := (CRChange kind: #added from: nil to: 'name
+	^ name')
+		          packageName: 'P' className: 'A' selector: #name;
+		          yourself.
+	review := CRReview title: 'pr' changes: {
+			          change.
+			          getter }.
+	part := review part: 'Code' summary: 'The code'.
+	part add: change.
+	accessors := review part: 'Accessors' summary: 'Getters'.
+	accessors add: getter.
+	presenter := CRReviewPresenter on: review.
+	presenter hideAccessorsCheckBox state: true.
+	self assert: presenter tree roots asArray equals: { part }.
+	presenter hideAccessorsCheckBox state: false.
+	self assert: presenter tree roots asArray equals: {
+			part.
+			accessors }
 ]
 
 { #category : 'tests' }

@@ -48,6 +48,10 @@ newReview reuse: review.   "answers what it could not place"
 "Open the tool: refused while a change is unfiled or a part is empty, so nothing is left out (checkComplete)"
 review open.
 
+"The words the pull request adds, each with the changes that add them; words new to the code first"
+review vocabulary.
+change isAccessor.       "a plain getter or setter"
+
 "The reviewer's notes, as the tool's Export button copies them"
 review markdown.
 ```
@@ -60,7 +64,7 @@ For tests, give the changes by hand: `CRReview title: 'pr' changes: { ... }`.
 
 ## The tool
 
-- **Left:** the tree. Each change has an icon for added, removed or changed. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note. Right-click marks an item reviewed or not.
+- **Left:** the tree. **Group by** shows it by parts or by vocabulary: each word the pull request adds (split at camel case, lowercased, plurals dropped), marked "(new)" when the code before did not use it. **Hide accessors** hides plain getters and setters, and the parts left empty; sizes count what is shown. Each change has an icon for added, removed or changed. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note. Right-click marks an item reviewed or not.
 - **Right:** a part's summary, or a change's old/new diff with why it was made (the messages of the commits that touched it); the Reviewed mark and the note of the selected item.
 - **Marks:** marking a part marks everything under it. A part is reviewed when everything under it is: marking the last child marks the part, unmarking a child unmarks its parts (not its siblings).
 - **Order:** in a part, sub-parts come first in the order they were added; then changes, always in the same order: code before files, by class, the class definition first, then instance-side methods, then class-side ones, by selector.

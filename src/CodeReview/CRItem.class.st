@@ -16,6 +16,13 @@ Class {
 }
 
 { #category : 'accessing' }
+CRItem >> acceptsNote [
+	"Whether the reviewer can write a note on me"
+
+	^ true
+]
+
+{ #category : 'accessing' }
 CRItem >> allItemsDo: aBlock [
 	"Me and everything below me, depth first"
 
@@ -27,6 +34,13 @@ CRItem >> allItemsDo: aBlock [
 CRItem >> children [
 
 	^ #(  )
+]
+
+{ #category : 'filtering' }
+CRItem >> childrenShowing: aBlock [
+	"My children that hold a change aBlock accepts"
+
+	^ self children select: [ :each | each shows: aBlock ]
 ]
 
 { #category : 'accessing' }
@@ -74,6 +88,12 @@ CRItem >> lineCount [
 	"The lines added and removed under me"
 
 	^ self subclassResponsibility
+]
+
+{ #category : 'filtering' }
+CRItem >> lineCountShowing: aBlock [
+
+	^ (self childrenShowing: aBlock) inject: 0 into: [ :sum :each | sum + (each lineCountShowing: aBlock) ]
 ]
 
 { #category : 'private' }
@@ -140,6 +160,13 @@ CRItem >> reviewed: aBoolean [
 
 	self markWithChildren: aBoolean.
 	parent ifNotNil: [ :part | part childReviewed: aBoolean ]
+]
+
+{ #category : 'filtering' }
+CRItem >> shows: aBlock [
+	"Whether a change under me is accepted by aBlock"
+
+	^ (self childrenShowing: aBlock) isNotEmpty
 ]
 
 { #category : 'accessing' }

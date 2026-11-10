@@ -14,6 +14,14 @@ Class {
 	#package : 'CodeReview-Tests'
 }
 
+{ #category : 'tests - accessors' }
+CRReviewTest >> method: aString [
+
+	^ (CRChange kind: #added from: nil to: aString)
+		  packageName: 'P' className: 'A' selector: #x;
+		  yourself
+]
+
 { #category : 'running' }
 CRReviewTest >> setUp [
 
@@ -37,6 +45,21 @@ CRReviewTest >> setUp [
 			          added.
 			          changed.
 			          file }
+]
+
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testAChangeAddsTheWordsOfItsNewLines [
+
+	| change |
+	change := (CRChange
+		           kind: #changed
+		           from: 'size
+	^ items size'
+		           to: 'size
+	^ candidates size')
+		          packageName: 'P' className: 'A' selector: #size;
+		          yourself.
+	self assert: change addedWords asArray equals: #( 'candidate' 'size' )
 ]
 
 { #category : 'tests' }
@@ -165,6 +188,30 @@ CRReviewTest >> testChangesNameWhatTheyChange [
 		deny: added isFile
 ]
 
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testCommentsAndStringsHaveNoVocabulary [
+
+	self
+		assert: (CRVocabulary wordsIn: 'foo
+	"a resolver comment"
+	^ ''some string''') asArray
+		equals: #( 'foo' )
+]
+
+{ #category : 'tests - accessors' }
+CRReviewTest >> testGettersAndSettersAreAccessors [
+
+	self
+		assert: (self method: 'name
+	^ name') isAccessor;
+		assert: (self method: 'name: aString
+	name := aString') isAccessor;
+		assert: (self method: 'name: aString
+	"Set it"
+	name := aString.
+	^ self') isAccessor
+]
+
 { #category : 'tests' }
 CRReviewTest >> testGroupByLeavesSubPartsWhereTheyAre [
 
@@ -230,6 +277,21 @@ Why 2?' withUnixLineEndings);
 		assert: (markdown includesSubstring: '- Code › A>>foo added')
 ]
 
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testMarkingAWordMarksItsChangesInTheirParts [
+
+	| part |
+	part := review part: 'Code' summary: ''.
+	part addAll: {
+			added.
+			changed }.
+	review vocabulary first reviewed: true.
+	self
+		assert: added isReviewed;
+		deny: changed isReviewed;
+		deny: part isReviewed
+]
+
 { #category : 'tests' }
 CRReviewTest >> testMarkingTheLastChildMarksTheParents [
 
@@ -246,6 +308,21 @@ CRReviewTest >> testMarkingTheLastChildMarksTheParents [
 	self
 		assert: sub isReviewed;
 		assert: part isReviewed
+]
+
+{ #category : 'tests - accessors' }
+CRReviewTest >> testOtherMethodsAreNotAccessors [
+
+	self
+		deny: (self method: 'name
+	^ name ifNil: [ ''none'' ]') isAccessor;
+		deny: (self method: 'name
+	^ Name') isAccessor;
+		deny: (self method: 'me
+	^ self') isAccessor;
+		deny: (self method: 'name: aString
+	name := aString asUppercase') isAccessor;
+		deny: file isAccessor
 ]
 
 { #category : 'tests' }
@@ -322,6 +399,15 @@ CRReviewTest >> testReuseTakesTheTreeNotesMovesAndMarksOfAnOlderReview [
 		assert: (newer root children collect: [ :each | each summary ]) asArray equals: #( 'The code' '' )
 ]
 
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testSplitsIdentifiersIntoNormalizedWords [
+
+	self
+		assert: (CRVocabulary wordsIn: 'at: aKey put: resolvedProjects') asArray equals: #( 'key' 'put' 'resolved' 'project' );
+		assert: (CRVocabulary wordsOf: 'MetacelloMVSGraph') asArray equals: #( 'metacello' 'mvs' 'graph' );
+		assert: (CRVocabulary wordsOf: 'dependencies') asArray equals: #( 'dependency' )
+]
+
 { #category : 'tests' }
 CRReviewTest >> testTheSizeLabelSaysLinesAndItems [
 
@@ -334,6 +420,29 @@ CRReviewTest >> testTheSizeLabelSaysLinesAndItems [
 	self
 		assert: added sizeLabel equals: '2 lines';
 		assert: part sizeLabel equals: '2 items, 4 lines'
+]
+
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testTheVocabularyGroupsChangesByWordNewOnesFirst [
+
+	| renamed words |
+	renamed := (CRChange
+		            kind: #changed
+		            from: 'baz
+	^ foo'
+		            to: 'baz
+	^ foo bar')
+		           packageName: 'P' className: 'A' selector: #baz;
+		           yourself.
+	words := (CRReview title: 'pr' changes: {
+			          added.
+			          renamed }) vocabulary.
+	self
+		assert: (words collect: [ :each | each title ]) asArray equals: #( 'bar (new)' 'foo' );
+		assert: words first children asArray equals: { renamed };
+		assert: words last children asSet equals: {
+				added.
+				renamed } asSet
 ]
 
 { #category : 'tests' }

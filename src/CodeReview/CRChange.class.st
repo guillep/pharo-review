@@ -41,6 +41,16 @@ CRChange >> addDestination: aChange [
 	destinations := self destinations copyWith: aChange
 ]
 
+{ #category : 'vocabulary' }
+CRChange >> addedWords [
+	"The words of the code I add: all of it when I am added, the inserted lines when I am changed, none when I am removed or a file"
+
+	self isFile ifTrue: [ ^ #(  ) ].
+	kind = #removed ifTrue: [ ^ #(  ) ].
+	kind = #added ifTrue: [ ^ CRVocabulary wordsIn: newSource ].
+	^ CRVocabulary wordsIn: newSource onLines: self insertedLineNumbers
+]
+
 { #category : 'accessing' }
 CRChange >> baseClassName [
 	"The class I change, without ' class' for the class side"
@@ -119,6 +129,35 @@ CRChange >> imageClass [
 		  ifFalse: [ class ]
 ]
 
+{ #category : 'vocabulary' }
+CRChange >> insertedLineNumbers [
+	"The numbers of my new lines that the old source does not have"
+
+	| numbers line |
+	numbers := Set new.
+	line := 0.
+	(TextDiffBuilder from: (oldSource ifNil: [ '' ]) to: newSource)
+		patchSequenceDoIfMatch: [ :each | line := line + 1 ]
+		ifInsert: [ :each |
+				line := line + 1.
+				numbers add: line ]
+		ifRemove: [ :each |  ].
+	^ numbers
+]
+
+{ #category : 'accessors' }
+CRChange >> isAccessor [
+	"Whether I am a method that only answers an instance variable (a getter) or only sets one to its argument (a setter)"
+
+	| method |
+	self isMethod ifFalse: [ ^ false ].
+	method := [ RBParser parseMethod: (newSource ifNil: [ oldSource ]) ]
+		          on: Error
+		          do: [ ^ false ].
+	method temporaries ifNotEmpty: [ ^ false ].
+	^ (self isGetter: method) or: [ self isSetter: method ]
+]
+
 { #category : 'accessing' }
 CRChange >> isBrowsable [
 
@@ -135,6 +174,23 @@ CRChange >> isChange [
 CRChange >> isFile [
 
 	^ className isNil
+]
+
+{ #category : 'accessors' }
+CRChange >> isGetter: aMethodNode [
+
+	| statements |
+	statements := aMethodNode body statements.
+	^ aMethodNode arguments isEmpty and: [
+		  statements size = 1 and: [ statements first isReturn and: [ self isInstanceVariable: statements first value ] ] ]
+]
+
+{ #category : 'accessors' }
+CRChange >> isInstanceVariable: aNode [
+	"Read without the class: a variable that is neither a pseudo-variable nor a global (capitalized)"
+
+	^ aNode isVariable and: [
+		  (#( 'self' 'super' 'thisContext' 'true' 'false' 'nil' ) includes: aNode name) not and: [ aNode name first isLowercase ] ]
 ]
 
 { #category : 'accessing' }
@@ -155,6 +211,21 @@ CRChange >> isMoved [
 	"Whether my code came from other changes"
 
 	^ self origins isNotEmpty
+]
+
+{ #category : 'accessors' }
+CRChange >> isSetter: aMethodNode [
+
+	| statements assignment |
+	statements := aMethodNode body statements.
+	aMethodNode arguments size = 1 ifFalse: [ ^ false ].
+	(statements size between: 1 and: 2) ifFalse: [ ^ false ].
+	assignment := statements first.
+	assignment isAssignment ifFalse: [ ^ false ].
+	(self isInstanceVariable: assignment variable) ifFalse: [ ^ false ].
+	(assignment value isVariable and: [ assignment value name = aMethodNode arguments first name ]) ifFalse: [ ^ false ].
+	^ statements size = 1 or: [
+		  statements last isReturn and: [ statements last value isVariable and: [ statements last value name = 'self' ] ] ]
 ]
 
 { #category : 'accessing' }
@@ -181,6 +252,12 @@ CRChange >> lineCount [
 		ifInsert: [ :line | count := count + 1 ]
 		ifRemove: [ :line | count := count + 1 ].
 	^ count
+]
+
+{ #category : 'filtering' }
+CRChange >> lineCountShowing: aBlock [
+
+	^ self lineCount
 ]
 
 { #category : 'moves' }
@@ -211,6 +288,14 @@ CRChange >> newSource [
 CRChange >> oldSource [
 
 	^ oldSource
+]
+
+{ #category : 'vocabulary' }
+CRChange >> oldWords [
+	"The words of the code before me"
+
+	(self isFile or: [ oldSource isNil ]) ifTrue: [ ^ #(  ) ].
+	^ CRVocabulary wordsIn: oldSource
 ]
 
 { #category : 'moves' }
@@ -282,6 +367,12 @@ CRChange >> setKind: aSymbol from: anOldString to: aNewString [
 	newSource := aNewString ifNil: [ '' ]
 ]
 
+{ #category : 'filtering' }
+CRChange >> shows: aBlock [
+
+	^ aBlock value: self
+]
+
 { #category : 'accessing' }
 CRChange >> sizeLabel [
 
@@ -289,6 +380,12 @@ CRChange >> sizeLabel [
 			  stream
 				  print: self lineCount;
 				  nextPutAll: ' lines' ]
+]
+
+{ #category : 'filtering' }
+CRChange >> sizeLabelShowing: aBlock [
+
+	^ self sizeLabel
 ]
 
 { #category : 'comparing' }
