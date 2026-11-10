@@ -391,6 +391,12 @@ CRReviewTest >> testReuseTakesTheTreeNotesMovesAndMarksOfAnOlderReview [
 ]
 
 { #category : 'tests - vocabulary' }
+CRReviewTest >> testSeriesIsSingular [
+
+	self assert: (CRVocabulary wordsOf: 'versionSeries') asArray equals: #( 'version' 'series' )
+]
+
+{ #category : 'tests - vocabulary' }
 CRReviewTest >> testSplitsIdentifiersIntoNormalizedWords [
 
 	self
@@ -424,13 +430,30 @@ CRReviewTest >> testTheVocabularyGroupsChangesByWordNewOnesFirst [
 	words := (CRReview title: 'pr' changes: {
 			          added.
 			          changed.
-			          fooBar }) vocabulary.
+			          fooBar }) vocabulary first children.
 	self
 		assert: (words collect: [ :each | each title ]) asArray equals: #( 'foo (new)' 'graph (new)' 'bar' );
 		assert: words first children asSet equals: {
 				added.
 				fooBar } asSet;
 		assert: words last children asArray equals: { fooBar }
+]
+
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testTheVocabularyOfTestsIsApart [
+
+	| test vocabulary |
+	test := (CRChange kind: #added from: nil to: 'testZork
+	^ 1')
+		        packageName: 'P' className: 'CRReviewTest' selector: #testZork;
+		        yourself.
+	vocabulary := (CRReview title: 'pr' changes: {
+			               added.
+			               test }) vocabulary.
+	self
+		assert: (vocabulary collect: [ :each | each title ]) asArray equals: #( 'Code' 'Tests' );
+		assert: (vocabulary first children collect: [ :each | each word ]) asArray equals: #( 'foo' );
+		assert: ((vocabulary last children collect: [ :each | each word ]) includes: 'zork')
 ]
 
 { #category : 'tests' }

@@ -210,6 +210,13 @@ CRChange >> isSetter: aMethodNode [
 		  statements last isReturn and: [ statements last value isVariable and: [ statements last value name = 'self' ] ] ]
 ]
 
+{ #category : 'testing' }
+CRChange >> isTest [
+	"Whether I change a test class"
+
+	^ self imageClass ifNil: [ false ] ifNotNil: [ :class | class instanceSide isTestCase ]
+]
+
 { #category : 'accessing' }
 CRChange >> key [
 	"What identifies what I change across commits"

@@ -114,9 +114,9 @@ CRReviewPresenterTest >> testAWordTakesNoNote [
 	(review part: 'Code' summary: 'The code') add: zork.
 	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
-	presenter tree selectPath: #( 1 ).
+	presenter tree selectPath: #( 1 1 ).
 	self
-		assert: presenter summary text asString equals: review vocabulary first description;
+		assert: presenter summary text asString equals: review vocabulary first children first description;
 		deny: presenter note isEnabled
 ]
 
@@ -156,7 +156,9 @@ CRReviewPresenterTest >> testGroupingByVocabularyShowsTheWords [
 	part add: zork.
 	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
-	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'zork (new)' ).
+	self
+		assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'Code' );
+		assert: (self wordTitlesUnder: presenter tree roots first) equals: #( 'zork (new)' ).
 	presenter groupByList selectItem: 'Parts'.
 	self assert: presenter tree roots asArray equals: { part }
 ]
@@ -257,14 +259,18 @@ CRReviewPresenterTest >> testWordsSortByOccurrences [
 	changes := {
 		           (self addedMethod: #zork in: 'Graph').
 		           (self addedMethod: #zorkGraph in: 'Graph').
-		           (self addedMethod: #zorkAll in: 'Other') }.
+		           (self addedMethod: #zorkAll in: 'Extra') }.
 	review := CRReview title: 'pr' changes: changes.
 	(review part: 'Code' summary: 'The code') addAll: changes.
 	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
-	self assert: presenter tree roots first title equals: 'all (new)'.
+	self assert: (self wordTitlesUnder: presenter tree roots first) first equals: 'all (new)'.
 	presenter sortList selectItem: 'Occurrences'.
-	self
-		assert: (presenter tree roots collect: [ :each | each title ]) asArray
-		equals: #( 'zork (new)' 'graph (new)' 'all (new)' 'other (new)' )
+	self assert: (self wordTitlesUnder: presenter tree roots first) equals: #( 'zork (new)' 'graph (new)' 'all (new)' 'extra (new)' )
+]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> wordTitlesUnder: aWordList [
+
+	^ ((presenter childrenOf: aWordList) collect: [ :each | each title ]) asArray
 ]

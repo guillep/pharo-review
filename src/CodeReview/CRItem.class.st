@@ -83,6 +83,12 @@ CRItem >> isReviewed [
 	^ reviewed
 ]
 
+{ #category : 'testing' }
+CRItem >> isWordList [
+
+	^ false
+]
+
 { #category : 'accessing' }
 CRItem >> lineCount [
 	"The lines added and removed under me"

@@ -16,6 +16,7 @@ CRVocabulary class >> normalize: aWord [
 
 	| word |
 	word := aWord asLowercase.
+	(#( 'series' 'species' ) includes: word) ifTrue: [ ^ word ].
 	(word size > 4 and: [ word endsWith: 'ies' ]) ifTrue: [ ^ (word allButLast: 3) , 'y' ].
 	(word size > 3 and: [ (word endsWith: 's') and: [ (#( 'ss' 'us' 'is' ) anySatisfy: [ :ending | word endsWith: ending ]) not ] ])
 		ifTrue: [ ^ word allButLast ].
@@ -48,7 +49,7 @@ CRVocabulary class >> splitCamelCase: aString [
 CRVocabulary class >> stopWords [
 
 	^ #( 'an' 'the' 'self' 'super' 'thiscontext' 'true' 'false' 'nil' 'of' 'to' 'in' 'on' 'or' 'and' 'with' 'for' 'at' 'by' 'is' 'it'
-	     'if' 'do' 'as' ) asSet
+	     'if' 'do' 'as' 'are' 'but' 'has' 'have' 'into' 'its' 'no' 'non' 'not' 'only' 'other' 'that' 'why' ) asSet
 ]
 
 { #category : 'extracting' }

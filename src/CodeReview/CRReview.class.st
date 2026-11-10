@@ -84,16 +84,13 @@ CRReview >> checkComplete [
 { #category : 'vocabulary' }
 CRReview >> computeVocabulary [
 
-	| byWord base |
-	byWord := Dictionary new.
-	changes do: [ :change |
-		change addedWords asSet do: [ :word | (byWord at: word ifAbsentPut: [ OrderedCollection new ]) add: change ] ].
+	| base tests code |
 	base := self wordsBefore.
-	^ (byWord associations collect: [ :each | CRWord word: each key new: (base includes: each key) not changes: each value asArray ])
-		  asSortedCollection: [ :a :b |
-				  a isNew = b isNew
-					  ifTrue: [ a word <= b word ]
-					  ifFalse: [ a isNew ] ]
+	tests := changes select: [ :each | each isTest ].
+	code := changes reject: [ :each | each isTest ].
+	^ {
+		  (CRWordList name: 'Code' words: (self wordsOf: code before: base)).
+		  (CRWordList name: 'Tests' words: (self wordsOf: tests before: base)) }
 ]
 
 { #category : 'accessing' }
@@ -251,7 +248,7 @@ CRReview >> unfiled [
 
 { #category : 'vocabulary' }
 CRReview >> vocabulary [
-	"One CRWord per word of the added code, with the changes that use it: the new words first, then the others, each alphabetically. Computed once"
+	"The words of the names the code adds, and those the tests add, each a CRWordList. Computed once"
 
 	^ vocabulary ifNil: [ vocabulary := self computeVocabulary ]
 ]
@@ -274,4 +271,19 @@ CRReview >> wordsBefore [
 							(added includes: method methodClass name asString -> method selector) ifFalse: [
 								words addAll: (CRVocabulary wordsOf: method selector) ] ] ] ].
 	^ words
+]
+
+{ #category : 'vocabulary' }
+CRReview >> wordsOf: aCollectionOfChanges before: aSetOfWords [
+	"One CRWord per word the changes add, with the changes adding it: the new words first, then the others, each alphabetically"
+
+	| byWord |
+	byWord := Dictionary new.
+	aCollectionOfChanges do: [ :change |
+		change addedWords asSet do: [ :word | (byWord at: word ifAbsentPut: [ OrderedCollection new ]) add: change ] ].
+	^ (byWord associations collect: [ :each |
+		   CRWord word: each key new: (aSetOfWords includes: each key) not changes: each value asArray ]) asSortedCollection: [ :a :b |
+			  a isNew = b isNew
+				  ifTrue: [ a word <= b word ]
+				  ifFalse: [ a isNew ] ]
 ]

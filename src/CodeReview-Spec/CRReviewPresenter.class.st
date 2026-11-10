@@ -43,6 +43,17 @@ CRReviewPresenter >> changeView [
 ]
 
 { #category : 'tree' }
+CRReviewPresenter >> childrenOf: anItem [
+	"What the tree shows under anItem: the words of a list in the chosen order"
+
+	| children |
+	children := anItem childrenShowing: self filter.
+	^ anItem isWordList
+		  ifTrue: [ self sortWords: children ]
+		  ifFalse: [ children ]
+]
+
+{ #category : 'tree' }
 CRReviewPresenter >> defaultLayout [
 
 	^ SpPanedLayout newLeftToRight
@@ -116,7 +127,7 @@ CRReviewPresenter >> iconFor: anItem [
 CRReviewPresenter >> initializePresenters [
 
 	tree := self newTree
-		        children: [ :each | each childrenShowing: self filter ];
+		        children: [ :each | self childrenOf: each ];
 		        display: [ :each | self labelFor: each ];
 		        displayIcon: [ :each | self iconFor: each ];
 		        contextMenu: [ self reviewMenu ];
@@ -232,15 +243,14 @@ CRReviewPresenter >> reviewedCheckBox [
 
 { #category : 'tree' }
 CRReviewPresenter >> roots [
-	"The parts of the review, or its words in the chosen order"
+	"The parts of the review, or the words of its code and of its tests"
 
-	| byVocabulary roots |
+	| byVocabulary |
 	byVocabulary := groupByList selectedItem = 'Vocabulary'.
 	sortList enabled: byVocabulary.
-	roots := byVocabulary
-		         ifTrue: [ self sortWords: review vocabulary ]
-		         ifFalse: [ review root children ].
-	^ roots select: [ :each | each shows: self filter ]
+	^ (byVocabulary
+		   ifTrue: [ review vocabulary ]
+		   ifFalse: [ review root children ]) select: [ :each | each shows: self filter ]
 ]
 
 { #category : 'initialization' }
