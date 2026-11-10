@@ -73,6 +73,21 @@ CRReview >> changesSuchThat: aBlock [
 ]
 
 { #category : 'accessing' }
+CRReview >> checkComplete [
+	"Signal an error unless every change is in the tree and every part holds something"
+
+	self unfiled ifNotEmpty: [ :missing | ^ self error: missing size printString , ' changes are in no part (see unfiled)' ].
+	self emptyParts ifNotEmpty: [ :empty | ^ self error: empty size printString , ' parts are empty (see emptyParts)' ]
+]
+
+{ #category : 'accessing' }
+CRReview >> emptyParts [
+	"The parts that hold nothing: the tool would show them as 0 items"
+
+	^ root emptyParts
+]
+
+{ #category : 'accessing' }
 CRReview >> items [
 	"Every part and change, depth first"
 
@@ -211,7 +226,9 @@ CRReview >> title [
 
 { #category : 'accessing' }
 CRReview >> unfiled [
-	"The changes in no part yet"
+	"The changes the tree does not reach: in no part yet, or in a part that is no longer in the tree"
 
-	^ changes select: [ :each | each parent isNil ]
+	| filed |
+	filed := root allChanges asIdentitySet.
+	^ changes reject: [ :each | filed includes: each ]
 ]

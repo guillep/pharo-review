@@ -49,6 +49,18 @@ CRReviewTest >> testAChangeCountsTheLinesAddedAndRemoved [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testAChangeInAPartEmptiedAgainIsUnfiled [
+	"The tree decides, not the change's parent"
+
+	| part |
+	part := review part: 'Code' summary: ''.
+	part addAll: review changes.
+	part setName: 'Code' summary: ''.
+
+	self assert: review unfiled size equals: review changes size
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testAChangeIsInOnePartOnly [
 
 	| first second |
@@ -61,6 +73,14 @@ CRReviewTest >> testAChangeIsInOnePartOnly [
 		assert: first children isEmpty;
 		assert: second children asArray equals: { added };
 		assert: added parent equals: second
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testACompleteReviewChecks [
+
+	(review part: 'Code' summary: '') addAll: review changes.
+
+	self shouldnt: [ review checkComplete ] raise: Error
 ]
 
 { #category : 'tests' }
@@ -97,6 +117,17 @@ CRReviewTest >> testAPartMarkedReviewedMarksItsChildren [
 		assert: changed isReviewed.
 	part reviewed: false.
 	self deny: added isReviewed
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testAnEmptyPartIsReported [
+
+	| empty |
+	(review part: 'Code' summary: '') addAll: review changes.
+	empty := review part: 'Nothing' summary: ''.
+
+	self assert: review emptyParts asArray equals: { empty }.
+	self should: [ review checkComplete ] raise: Error
 ]
 
 { #category : 'tests' }
@@ -228,6 +259,18 @@ CRReviewTest >> testPartsNest [
 	self
 		assert: changed place equals: 'Resolution › Objects › A>>bar changed';
 		assert: part lineCount equals: 2
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testRenamingAPartKeepsWhatItHolds [
+
+	| part |
+	part := review part: 'Code' summary: ''.
+	part addAll: review changes.
+	part name: 'Change the code'.
+
+	self assert: part name equals: 'Change the code'.
+	self assert: review unfiled isEmpty
 ]
 
 { #category : 'tests' }

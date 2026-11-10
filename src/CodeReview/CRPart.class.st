@@ -45,6 +45,17 @@ CRPart >> addAll: aCollection [
 ]
 
 { #category : 'accessing' }
+CRPart >> allChanges [
+	"Every change under me, at any depth"
+
+	^ children inject: OrderedCollection new into: [ :all :each |
+			  each isChange
+				  ifTrue: [ all add: each ]
+				  ifFalse: [ all addAll: each allChanges ].
+			  all ]
+]
+
+{ #category : 'accessing' }
 CRPart >> childReviewed: aBoolean [
 	"One of my children was marked (or unmarked): I am reviewed when all of them are. Unmarking leaves my other children as they are"
 
@@ -80,6 +91,17 @@ CRPart >> description [
 ]
 
 { #category : 'accessing' }
+CRPart >> emptyParts [
+	"The parts under me, at any depth, that hold nothing"
+
+	^ children inject: OrderedCollection new into: [ :all :each |
+			  each isChange ifFalse: [
+					  each children ifEmpty: [ all add: each ].
+					  all addAll: each emptyParts ].
+			  all ]
+]
+
+{ #category : 'accessing' }
 CRPart >> groupBy: aBlock [
 	"Move my changes (not my sub-parts) into new sub-parts, one per key aBlock answers for a change (a String naming the sub-part), in key order. Answer the new sub-parts"
 
@@ -106,6 +128,13 @@ CRPart >> name [
 ]
 
 { #category : 'accessing' }
+CRPart >> name: aString [
+	"Rename me, keeping what I hold"
+
+	name := aString
+]
+
+{ #category : 'accessing' }
 CRPart >> part: aName summary: aString [
 	"Answer a new part below me"
 
@@ -119,7 +148,7 @@ CRPart >> remove: anItem [
 	anItem parent: nil
 ]
 
-{ #category : 'accessing' }
+{ #category : 'initialization' }
 CRPart >> setName: aName summary: aString [
 
 	name := aName.
@@ -142,6 +171,12 @@ CRPart >> sizeLabel [
 CRPart >> summary [
 
 	^ summary
+]
+
+{ #category : 'accessing' }
+CRPart >> summary: aString [
+
+	summary := aString
 ]
 
 { #category : 'accessing' }

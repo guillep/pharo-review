@@ -2,8 +2,8 @@ Extension { #name : 'CRReview' }
 
 { #category : '*CodeReview-Spec' }
 CRReview >> open [
-	"Open the review tool. Every change must be in a part first"
+	"Open the review tool. Every change must be in the tree first, and no part empty"
 
-	self unfiled ifNotEmpty: [ :missing | ^ self error: missing size printString , ' changes are in no part (see unfiled)' ].
+	self checkComplete.
 	^ (CRReviewPresenter on: self) open
 ]

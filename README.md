@@ -31,7 +31,11 @@ resolution groupBy: [ :each | each className ].
 resolution groupBy: [ :each | each protocol ifNil: [ 'definitions' ] ].
 
 "A change is in one part only: adding it to another part moves it"
-review unfiled.          "the changes in no part yet"
+review unfiled.          "the changes the tree does not reach yet"
+review emptyParts.       "the parts holding nothing"
+
+"Rename a part, keeping what it holds"
+objects name: 'Add the resolution objects'.
 
 "Moved or extracted code: the tool compares the new code with where it came from"
 (review changeNamed: 'MetacelloVersionSpec>>loadableSpecsFor:')
@@ -41,7 +45,7 @@ review unfiled.          "the changes in no part yet"
 newReview := CRReview repository: 'pharo' from: '6e5455cd' to: 'HEAD'.
 newReview reuse: review.   "answers what it could not place"
 
-"Open the tool: refused while a change is unfiled, so nothing is left out"
+"Open the tool: refused while a change is unfiled or a part is empty, so nothing is left out (checkComplete)"
 review open.
 
 "The reviewer's notes, as the tool's Export button copies them"
