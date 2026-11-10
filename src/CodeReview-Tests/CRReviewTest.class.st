@@ -85,6 +85,43 @@ CRReviewTest >> testChangesNameWhatTheyChange [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testGroupByLeavesSubPartsWhereTheyAre [
+
+	| part sub |
+	part := review part: 'All' summary: ''.
+	sub := part part: 'Sub' summary: ''.
+	sub add: file.
+	part addAll: {
+			added.
+			changed }.
+	part groupBy: [ :each | 'Code' ].
+
+	self
+		assert: (part children collect: [ :each | each name ]) asArray equals: #( 'Sub' 'Code' );
+		assert: file parent equals: sub
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testGroupByMovesTheChangesIntoSubParts [
+
+	| part groups |
+	part := review part: 'All' summary: ''.
+	part addAll: review changes.
+	groups := part groupBy: [ :each |
+			          each isFile
+				          ifTrue: [ 'Files' ]
+				          ifFalse: [ each className ] ].
+
+	self
+		assert: (groups collect: [ :each | each name ]) asArray equals: #( 'A' 'Files' );
+		assert: groups first children asArray equals: {
+				added.
+				changed };
+		assert: part children asArray equals: groups asArray;
+		assert: changed place equals: 'All › A › A>>bar changed'
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testMarkdownHasTheNotesThenWhatIsNotReviewed [
 
 	| part markdown |
@@ -124,6 +161,20 @@ CRReviewTest >> testPartsNest [
 	self
 		assert: changed place equals: 'Resolution › Objects › A>>bar changed';
 		assert: part lineCount equals: 2
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testTheSizeLabelSaysLinesAndItems [
+
+	| part |
+	part := review part: 'All' summary: ''.
+	part addAll: {
+			added.
+			changed }.
+
+	self
+		assert: added sizeLabel equals: '2 lines';
+		assert: part sizeLabel equals: '2 items, 4 lines'
 ]
 
 { #category : 'tests' }

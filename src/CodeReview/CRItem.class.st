@@ -58,6 +58,12 @@ CRItem >> isBrowsable [
 ]
 
 { #category : 'accessing' }
+CRItem >> isChange [
+
+	^ false
+]
+
+{ #category : 'accessing' }
 CRItem >> isReviewed [
 
 	^ reviewed
@@ -125,6 +131,13 @@ CRItem >> place [
 CRItem >> reviewed: aBoolean [
 
 	reviewed := aBoolean
+]
+
+{ #category : 'accessing' }
+CRItem >> sizeLabel [
+	"What the tree shows after my title: '12 lines', and the items for a part"
+
+	^ self subclassResponsibility
 ]
 
 { #category : 'accessing' }

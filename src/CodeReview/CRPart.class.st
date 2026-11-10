@@ -48,13 +48,31 @@ CRPart >> children [
 CRPart >> description [
 
 	^ String streamContents: [ :stream |
+			  stream nextPutAll: name.
+			  summary ifNotEmpty: [
+					  stream
+						  nextPutAll: ': ';
+						  nextPutAll: summary ].
 			  stream
-				  nextPutAll: name;
-				  nextPutAll: ': ';
-				  nextPutAll: summary;
 				  cr;
+				  print: children size;
+				  nextPutAll: ' items, ';
 				  print: self lineCount;
 				  nextPutAll: ' lines changed' ]
+]
+
+{ #category : 'accessing' }
+CRPart >> groupBy: aBlock [
+	"Move my changes (not my sub-parts) into new sub-parts, one per key aBlock answers for a change (a String naming the sub-part), in key order. Answer the new sub-parts"
+
+	| groups |
+	groups := Dictionary new.
+	children do: [ :each |
+		each isChange ifTrue: [ (groups at: (aBlock value: each) ifAbsentPut: [ OrderedCollection new ]) add: each ] ].
+	^ groups keys sorted collect: [ :key |
+			  (self part: key summary: '')
+				  addAll: (groups at: key);
+				  yourself ]
 ]
 
 { #category : 'accessing' }
@@ -89,6 +107,17 @@ CRPart >> setName: aName summary: aString [
 	name := aName.
 	summary := aString.
 	children := OrderedCollection new
+]
+
+{ #category : 'accessing' }
+CRPart >> sizeLabel [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  print: children size;
+				  nextPutAll: ' items, ';
+				  print: self lineCount;
+				  nextPutAll: ' lines' ]
 ]
 
 { #category : 'accessing' }

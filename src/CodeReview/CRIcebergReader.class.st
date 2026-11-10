@@ -50,6 +50,7 @@ CRIcebergReader >> changeFrom: anOperation in: aNode [
 						   ifTrue: [ definition className , ' class' ]
 						   ifFalse: [ definition className ])
 				  selector: definition name;
+				  protocol: definition protocol asString;
 				  yourself ].
 	^ change
 		  packageName: (self packageNameOf: aNode) className: definition name selector: nil;

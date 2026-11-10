@@ -3,6 +3,7 @@ I am one change of a pull request: a method, a class definition or a file, added
 
 - kind: #added, #removed or #changed.
 - packageName, className, selector: what I change; selector is nil for a class definition, className is nil for a file.
+- protocol: the method's protocol (nil for a class definition or a file).
 - path: the file, for a file change (a file of a package not loaded in the image, or not code).
 "
 Class {
@@ -15,7 +16,8 @@ Class {
 		'selector',
 		'path',
 		'oldSource',
-		'newSource'
+		'newSource',
+		'protocol'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -50,6 +52,12 @@ CRChange >> description [
 CRChange >> isBrowsable [
 
 	^ self isFile not
+]
+
+{ #category : 'accessing' }
+CRChange >> isChange [
+
+	^ true
 ]
 
 { #category : 'accessing' }
@@ -133,6 +141,19 @@ CRChange >> path: aPath [
 ]
 
 { #category : 'accessing' }
+CRChange >> protocol [
+	"The method's protocol; nil for a class definition or a file"
+
+	^ protocol
+]
+
+{ #category : 'accessing' }
+CRChange >> protocol: aString [
+
+	protocol := aString
+]
+
+{ #category : 'accessing' }
 CRChange >> selector [
 
 	^ selector
@@ -144,6 +165,15 @@ CRChange >> setKind: aSymbol from: anOldString to: aNewString [
 	kind := aSymbol.
 	oldSource := anOldString ifNil: [ '' ].
 	newSource := aNewString ifNil: [ '' ]
+]
+
+{ #category : 'accessing' }
+CRChange >> sizeLabel [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  print: self lineCount;
+				  nextPutAll: ' lines' ]
 ]
 
 { #category : 'accessing' }

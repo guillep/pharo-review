@@ -133,7 +133,7 @@ CRReviewPresenter >> labelFor: anItem [
 						   ifFalse: [ '   ' ]);
 				  nextPutAll: anItem title;
 				  nextPutAll: '  (';
-				  print: anItem lineCount;
+				  nextPutAll: anItem sizeLabel;
 				  nextPutAll: ')'.
 			  anItem hasNote ifTrue: [ stream nextPutAll: '  ✎' ] ]
 ]
