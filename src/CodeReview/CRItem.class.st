@@ -1,0 +1,135 @@
+"
+I am one item of a code review: a part of what the pull request does, or one change. The reviewer marks me reviewed and writes a note on me.
+
+My subclasses: CRPart (a part, with children) and CRChange (a change, a leaf).
+"
+Class {
+	#name : 'CRItem',
+	#superclass : 'Object',
+	#instVars : [
+		'parent',
+		'reviewed',
+		'note'
+	],
+	#category : 'CodeReview',
+	#package : 'CodeReview'
+}
+
+{ #category : 'accessing' }
+CRItem >> allItemsDo: aBlock [
+	"Me and everything below me, depth first"
+
+	aBlock value: self.
+	self children do: [ :each | each allItemsDo: aBlock ]
+]
+
+{ #category : 'accessing' }
+CRItem >> children [
+
+	^ #(  )
+]
+
+{ #category : 'accessing' }
+CRItem >> description [
+	"A few lines saying what I am, for the tool"
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+CRItem >> hasNote [
+
+	^ note trimBoth isNotEmpty
+]
+
+{ #category : 'accessing' }
+CRItem >> initialize [
+
+	super initialize.
+	reviewed := false.
+	note := ''
+]
+
+{ #category : 'accessing' }
+CRItem >> isBrowsable [
+	"Whether I name code in the image"
+
+	^ false
+]
+
+{ #category : 'accessing' }
+CRItem >> isReviewed [
+
+	^ reviewed
+]
+
+{ #category : 'accessing' }
+CRItem >> lineCount [
+	"The lines added and removed under me"
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+CRItem >> newSource [
+	"What I am after the pull request: empty unless I am a change"
+
+	^ ''
+]
+
+{ #category : 'accessing' }
+CRItem >> note [
+
+	^ note
+]
+
+{ #category : 'accessing' }
+CRItem >> note: aString [
+
+	note := aString
+]
+
+{ #category : 'accessing' }
+CRItem >> oldSource [
+	"What I was before the pull request: empty unless I am a change"
+
+	^ ''
+]
+
+{ #category : 'accessing' }
+CRItem >> parent [
+
+	^ parent
+]
+
+{ #category : 'accessing' }
+CRItem >> parent: aPart [
+
+	parent := aPart
+]
+
+{ #category : 'accessing' }
+CRItem >> place [
+	"Where I am in the tree, from the first part below the review: 'Resolution › Interactive resolver › MetacelloResolution>>add:'"
+
+	| names item |
+	names := OrderedCollection new.
+	item := self.
+	[ item isNotNil and: [ item parent isNotNil ] ] whileTrue: [
+			names addFirst: item title.
+			item := item parent ].
+	^ ' › ' join: names
+]
+
+{ #category : 'accessing' }
+CRItem >> reviewed: aBoolean [
+
+	reviewed := aBoolean
+]
+
+{ #category : 'accessing' }
+CRItem >> title [
+	"One line naming me in the tree"
+
+	^ self subclassResponsibility
+]
