@@ -43,12 +43,10 @@ CRChange >> addDestination: aChange [
 
 { #category : 'vocabulary' }
 CRChange >> addedWords [
-	"The words of the code I add: all of it when I am added, the inserted lines when I am changed, none when I am removed or a file"
+	"The words of the names I add: my class and selector when I am added; none otherwise, nor for a file"
 
-	self isFile ifTrue: [ ^ #(  ) ].
-	kind = #removed ifTrue: [ ^ #(  ) ].
-	kind = #added ifTrue: [ ^ CRVocabulary wordsIn: (self codeOf: newSource) ].
-	^ CRVocabulary wordsIn: (self codeOf: newSource) onLines: self insertedLineNumbers
+	(self isFile or: [ kind ~= #added ]) ifTrue: [ ^ #(  ) ].
+	^ self nameWords
 ]
 
 { #category : 'accessing' }
@@ -62,16 +60,6 @@ CRChange >> baseClassName [
 CRChange >> className [
 
 	^ className
-]
-
-{ #category : 'vocabulary' }
-CRChange >> codeOf: aSource [
-	"aSource without the class comment: Iceberg writes a class definition, an empty line, then the comment"
-
-	| end |
-	selector ifNotNil: [ ^ aSource ].
-	end := aSource lines indexOf: '' ifAbsent: [ ^ aSource ].
-	^ String cr join: (aSource lines first: end - 1)
 ]
 
 { #category : 'accessing' }
@@ -137,22 +125,6 @@ CRChange >> imageClass [
 	^ (className endsWith: ' class')
 		  ifTrue: [ class class ]
 		  ifFalse: [ class ]
-]
-
-{ #category : 'vocabulary' }
-CRChange >> insertedLineNumbers [
-	"The numbers of my new lines that the old source does not have"
-
-	| numbers line |
-	numbers := Set new.
-	line := 0.
-	(TextDiffBuilder from: (oldSource ifNil: [ '' ]) to: newSource)
-		patchSequenceDoIfMatch: [ :each | line := line + 1 ]
-		ifInsert: [ :each |
-				line := line + 1.
-				numbers add: line ]
-		ifRemove: [ :each |  ].
-	^ numbers
 ]
 
 { #category : 'accessors' }
@@ -288,6 +260,16 @@ CRChange >> name [
 	^ className
 ]
 
+{ #category : 'vocabulary' }
+CRChange >> nameWords [
+	"The words of my class name, and of my selector when I am a method"
+
+	| words |
+	words := OrderedCollection withAll: (CRVocabulary wordsOf: (className copyReplaceAll: ' class' with: '')).
+	selector ifNotNil: [ words addAll: (CRVocabulary wordsOf: selector) ].
+	^ words asArray
+]
+
 { #category : 'accessing' }
 CRChange >> newSource [
 
@@ -302,10 +284,10 @@ CRChange >> oldSource [
 
 { #category : 'vocabulary' }
 CRChange >> oldWords [
-	"The words of the code before me"
+	"The words of the names there before me: my class and selector when I am changed or removed"
 
-	(self isFile or: [ oldSource isNil ]) ifTrue: [ ^ #(  ) ].
-	^ CRVocabulary wordsIn: (self codeOf: oldSource)
+	(self isFile or: [ kind = #added ]) ifTrue: [ ^ #(  ) ].
+	^ self nameWords
 ]
 
 { #category : 'moves' }

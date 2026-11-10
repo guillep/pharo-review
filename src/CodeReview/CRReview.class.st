@@ -258,16 +258,20 @@ CRReview >> vocabulary [
 
 { #category : 'vocabulary' }
 CRReview >> wordsBefore [
-	"The words of the code before the pull request: the old code of my changes, and every method of the packages they touch that they leave as it is (read from the image)"
+	"The words of the names there before the pull request: those of my changed and removed code, and the classes and selectors of the packages they touch that I do not add (read from the image)"
 
-	| words changed |
+	| words added |
 	words := Set new.
 	changes do: [ :each | words addAll: each oldWords ].
-	changed := (changes select: [ :each | each isMethod ]) collect: [ :each | each className -> each selector ] as: Set.
+	added := (changes select: [ :each | each kind = #added and: [ each isFile not ] ])
+		         collect: [ :each | each className -> each selector ]
+		         as: Set.
 	((changes collect: [ :each | each packageName ] as: Set) reject: [ :each | each isNil ]) do: [ :packageName |
 			(PackageOrganizer default packageNamed: packageName ifAbsent: [ nil ]) ifNotNil: [ :package |
+					package definedClasses do: [ :class |
+						(added includes: class name asString -> nil) ifFalse: [ words addAll: (CRVocabulary wordsOf: class name) ] ].
 					package methods do: [ :method |
-							(changed includes: method methodClass name asString -> method selector) ifFalse: [
-								words addAll: (CRVocabulary wordsIn: method sourceCode) ] ] ] ].
+							(added includes: method methodClass name asString -> method selector) ifFalse: [
+								words addAll: (CRVocabulary wordsOf: method selector) ] ] ] ].
 	^ words
 ]

@@ -47,21 +47,6 @@ CRReviewTest >> setUp [
 			          file }
 ]
 
-{ #category : 'tests - vocabulary' }
-CRReviewTest >> testAChangeAddsTheWordsOfItsNewLines [
-
-	| change |
-	change := (CRChange
-		           kind: #changed
-		           from: 'size
-	^ items size'
-		           to: 'size
-	^ candidates size')
-		          packageName: 'P' className: 'A' selector: #size;
-		          yourself.
-	self assert: change addedWords asArray equals: #( 'candidate' 'size' )
-]
-
 { #category : 'tests' }
 CRReviewTest >> testAChangeCountsTheLinesAddedAndRemoved [
 
@@ -96,22 +81,6 @@ CRReviewTest >> testAChangeIsInOnePartOnly [
 		assert: first children isEmpty;
 		assert: second children asArray equals: { added };
 		assert: added parent equals: second
-]
-
-{ #category : 'tests - vocabulary' }
-CRReviewTest >> testAClassCommentHasNoVocabulary [
-
-	| definition |
-	definition := (CRChange kind: #added from: nil to: 'Object subclass: #Graph
-	instanceVariableNames: ''''
-	classVariableNames: ''''
-	poolDictionaries: ''''
-	category: ''P''
-
-I keep repositories')
-		              packageName: 'P' className: 'Graph' selector: nil;
-		              yourself.
-	self deny: (definition addedWords includes: 'repository')
 ]
 
 { #category : 'tests' }
@@ -202,16 +171,6 @@ CRReviewTest >> testChangesNameWhatTheyChange [
 		assert: file title equals: '.project changed';
 		assert: file isFile;
 		deny: added isFile
-]
-
-{ #category : 'tests - vocabulary' }
-CRReviewTest >> testCommentsAndStringsHaveNoVocabulary [
-
-	self
-		assert: (CRVocabulary wordsIn: 'foo
-	"a resolver comment"
-	^ ''some string''') asArray
-		equals: #( 'foo' )
 ]
 
 { #category : 'tests - accessors' }
@@ -332,6 +291,16 @@ CRReviewTest >> testNumbersAreNotWords [
 	self assert: (CRVocabulary wordsOf: 'test00Version35') asArray equals: #( 'test' 'version' )
 ]
 
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testOnlyAddedNamesHaveVocabulary [
+
+	self
+		assert: added addedWords asArray equals: #( 'foo' );
+		assert: changed addedWords isEmpty;
+		assert: changed oldWords asArray equals: #( 'bar' );
+		assert: file addedWords isEmpty
+]
+
 { #category : 'tests - accessors' }
 CRReviewTest >> testOtherMethodsAreNotAccessors [
 
@@ -425,7 +394,7 @@ CRReviewTest >> testReuseTakesTheTreeNotesMovesAndMarksOfAnOlderReview [
 CRReviewTest >> testSplitsIdentifiersIntoNormalizedWords [
 
 	self
-		assert: (CRVocabulary wordsIn: 'at: aKey put: resolvedProjects') asArray equals: #( 'key' 'put' 'resolved' 'project' );
+		assert: (CRVocabulary wordsOf: 'at:resolvedProjects:') asArray equals: #( 'resolved' 'project' );
 		assert: (CRVocabulary wordsOf: 'MetacelloMVSGraph') asArray equals: #( 'metacello' 'mvs' 'graph' );
 		assert: (CRVocabulary wordsOf: 'dependencies') asArray equals: #( 'dependency' )
 ]
@@ -447,24 +416,21 @@ CRReviewTest >> testTheSizeLabelSaysLinesAndItems [
 { #category : 'tests - vocabulary' }
 CRReviewTest >> testTheVocabularyGroupsChangesByWordNewOnesFirst [
 
-	| renamed words |
-	renamed := (CRChange
-		            kind: #changed
-		            from: 'baz
-	^ foo'
-		            to: 'baz
-	^ foo bar')
-		           packageName: 'P' className: 'A' selector: #baz;
-		           yourself.
+	| fooBar words |
+	fooBar := (CRChange kind: #added from: nil to: 'fooBar
+	^ 1')
+		          packageName: 'P' className: 'Graph' selector: #fooBar;
+		          yourself.
 	words := (CRReview title: 'pr' changes: {
 			          added.
-			          renamed }) vocabulary.
+			          changed.
+			          fooBar }) vocabulary.
 	self
-		assert: (words collect: [ :each | each title ]) asArray equals: #( 'bar (new)' 'foo' );
-		assert: words first children asArray equals: { renamed };
-		assert: words last children asSet equals: {
+		assert: (words collect: [ :each | each title ]) asArray equals: #( 'foo (new)' 'graph (new)' 'bar' );
+		assert: words first children asSet equals: {
 				added.
-				renamed } asSet
+				fooBar } asSet;
+		assert: words last children asArray equals: { fooBar }
 ]
 
 { #category : 'tests' }

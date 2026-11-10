@@ -14,6 +14,15 @@ Class {
 	#package : 'CodeReview-Tests'
 }
 
+{ #category : 'tests' }
+CRReviewPresenterTest >> addedMethod: aSelector in: aClassName [
+
+	^ (CRChange kind: #added from: nil to: aSelector , '
+	^ 1')
+		  packageName: 'P' className: aClassName selector: aSelector;
+		  yourself
+]
+
 { #category : 'running' }
 CRReviewPresenterTest >> select: anItem [
 
@@ -99,9 +108,16 @@ CRReviewPresenterTest >> testARemovalShowsTheOldCode [
 { #category : 'tests' }
 CRReviewPresenterTest >> testAWordTakesNoNote [
 
+	| zork |
+	zork := self addedMethod: #zork in: 'A'.
+	review := CRReview title: 'pr' changes: { zork }.
+	(review part: 'Code' summary: 'The code') add: zork.
+	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
 	presenter tree selectPath: #( 1 ).
-	self deny: presenter note isEnabled
+	self
+		assert: presenter summary text asString equals: review vocabulary first description;
+		deny: presenter note isEnabled
 ]
 
 { #category : 'tests' }
@@ -133,8 +149,14 @@ CRReviewPresenterTest >> testChangesHaveAnIconForTheirKind [
 { #category : 'tests' }
 CRReviewPresenterTest >> testGroupingByVocabularyShowsTheWords [
 
+	| zork |
+	zork := self addedMethod: #zork in: 'A'.
+	review := CRReview title: 'pr' changes: { zork }.
+	part := review part: 'Code' summary: 'The code'.
+	part add: zork.
+	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
-	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'new (new)' ).
+	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'zork (new)' ).
 	presenter groupByList selectItem: 'Parts'.
 	self assert: presenter tree roots asArray equals: { part }
 ]
@@ -231,20 +253,18 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 { #category : 'tests' }
 CRReviewPresenterTest >> testWordsSortByOccurrences [
 
-	| other |
-	other := (CRChange kind: #added from: nil to: 'zork
-	^ new')
-		         packageName: 'P' className: 'A' selector: #zork;
-		         yourself.
-	review := CRReview title: 'pr' changes: {
-			          change.
-			          other }.
-	(review part: 'Code' summary: 'The code') addAll: {
-			change.
-			other }.
+	| changes |
+	changes := {
+		           (self addedMethod: #zork in: 'Graph').
+		           (self addedMethod: #zorkGraph in: 'Graph').
+		           (self addedMethod: #zorkAll in: 'Other') }.
+	review := CRReview title: 'pr' changes: changes.
+	(review part: 'Code' summary: 'The code') addAll: changes.
 	presenter := CRReviewPresenter on: review.
 	presenter groupByList selectItem: 'Vocabulary'.
-	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'new (new)' 'zork (new)' ).
+	self assert: presenter tree roots first title equals: 'all (new)'.
 	presenter sortList selectItem: 'Occurrences'.
-	self assert: presenter tree roots first title equals: 'new (new)'
+	self
+		assert: (presenter tree roots collect: [ :each | each title ]) asArray
+		equals: #( 'zork (new)' 'graph (new)' 'all (new)' 'other (new)' )
 ]

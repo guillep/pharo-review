@@ -11,30 +11,6 @@ Class {
 }
 
 { #category : 'extracting' }
-CRVocabulary class >> identifierOf: aToken [
-	"The identifier aToken names: an identifier, a keyword or a symbol; nil for anything else (strings, numbers, punctuation)"
-
-	(aToken isIdentifier or: [ aToken isKeyword ]) ifTrue: [ ^ aToken value ].
-	(aToken isLiteralToken and: [ aToken value isSymbol ]) ifTrue: [ ^ aToken value ].
-	^ nil
-]
-
-{ #category : 'extracting' }
-CRVocabulary class >> lineOf: aPosition in: aCollectionOfLineStarts [
-
-	^ (aCollectionOfLineStarts findLast: [ :start | start <= aPosition ]) max: 1
-]
-
-{ #category : 'extracting' }
-CRVocabulary class >> lineStartsOf: aString [
-
-	| starts |
-	starts := OrderedCollection with: 1.
-	aString doWithIndex: [ :char :index | (char = Character cr or: [ char = Character lf ]) ifTrue: [ starts add: index + 1 ] ].
-	^ starts
-]
-
-{ #category : 'extracting' }
 CRVocabulary class >> normalize: aWord [
 	"Lowercase and singular"
 
@@ -73,29 +49,6 @@ CRVocabulary class >> stopWords [
 
 	^ #( 'an' 'the' 'self' 'super' 'thiscontext' 'true' 'false' 'nil' 'of' 'to' 'in' 'on' 'or' 'and' 'with' 'for' 'at' 'by' 'is' 'it'
 	     'if' 'do' 'as' ) asSet
-]
-
-{ #category : 'extracting' }
-CRVocabulary class >> wordsIn: aSource [
-	"The words of every identifier in aSource"
-
-	^ self wordsIn: aSource onLines: nil
-]
-
-{ #category : 'extracting' }
-CRVocabulary class >> wordsIn: aSource onLines: aSetOfLineNumbersOrNil [
-	"The words of the identifiers in aSource, only those on aSetOfLineNumbersOrNil when given (1-based). Code that does not scan has no words"
-
-	| tokens lineStarts words |
-	tokens := [ (RBScanner on: aSource readStream) contents ]
-		          on: Error
-		          do: [ ^ #(  ) ].
-	lineStarts := self lineStartsOf: aSource.
-	words := OrderedCollection new.
-	tokens do: [ :token |
-			(aSetOfLineNumbersOrNil isNil or: [ aSetOfLineNumbersOrNil includes: (self lineOf: token start in: lineStarts) ]) ifTrue: [
-				(self identifierOf: token) ifNotNil: [ :identifier | words addAll: (self wordsOf: identifier) ] ] ].
-	^ words asArray
 ]
 
 { #category : 'extracting' }
