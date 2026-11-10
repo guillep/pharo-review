@@ -231,6 +231,55 @@ CRReviewTest >> testPartsNest [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testReuseTakesTheTreeNotesMovesAndMarksOfAnOlderReview [
+
+	| old part newer newChanged newAdded newFile newExtra |
+	part := review part: 'Code' summary: 'The code'.
+	part addAll: {
+			added.
+			changed }.
+	(review part: 'Unrelated' summary: '') add: file.
+	added
+		reviewed: true;
+		note: 'ok'.
+	changed reviewed: true.
+	added movedFrom: changed.
+	old := review.
+	newAdded := (CRChange kind: #added from: nil to: added newSource)
+		            packageName: 'P' className: 'A' selector: #foo;
+		            yourself.
+	newChanged := (CRChange
+		               kind: #changed
+		               from: 'bar
+	^ 1'
+		               to: 'bar
+	^ 3')
+		              packageName: 'P' className: 'A' selector: #bar;
+		              yourself.
+	newExtra := (CRChange kind: #added from: nil to: 'baz')
+		            packageName: 'P' className: 'A' selector: #baz;
+		            yourself.
+	newFile := (CRChange kind: #changed from: 'a' to: 'b')
+		           path: '.project';
+		           yourself.
+	newer := CRReview title: 'pr' changes: {
+			         newAdded.
+			         newChanged.
+			         newExtra.
+			         newFile }.
+
+	self assert: (newer reuse: old) isEmpty.
+	self
+		assert: newAdded place equals: 'Code › A>>foo added';
+		assert: newExtra place equals: 'Code › A>>baz added';
+		assert: newAdded note equals: 'ok';
+		assert: newAdded isReviewed;
+		deny: newChanged isReviewed;
+		assert: newAdded origins asArray equals: { newChanged };
+		assert: (newer root children collect: [ :each | each summary ]) asArray equals: #( 'The code' '' )
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testTheSizeLabelSaysLinesAndItems [
 
 	| part |

@@ -33,6 +33,14 @@ resolution groupBy: [ :each | each protocol ifNil: [ 'definitions' ] ].
 "A change is in one part only: adding it to another part moves it"
 review unfiled.          "the changes in no part yet"
 
+"Moved or extracted code: the tool compares the new code with where it came from"
+(review changeNamed: 'MetacelloVersionSpec>>loadableSpecsFor:')
+	movedFrom: (review changeNamed: 'MetacelloRecordTarget>>listLoadableSpecsFrom:').
+
+"After the branch changed: keep the tree, notes, moves, and the marks of unchanged code"
+newReview := CRReview repository: 'pharo' from: '6e5455cd' to: 'HEAD'.
+newReview reuse: review.   "answers what it could not place"
+
 "Open the tool: refused while a change is unfiled, so nothing is left out"
 review open.
 

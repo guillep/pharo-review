@@ -48,6 +48,19 @@ CRReview class >> title: aString changes: aCollection [
 ]
 
 { #category : 'accessing' }
+CRReview >> changeNamed: aString [
+	"The change of 'Class>>selector', 'Class class>>selector', a class name or a file path"
+
+	^ self changeNamed: aString ifNone: [ self error: 'No change named ' , aString ]
+]
+
+{ #category : 'accessing' }
+CRReview >> changeNamed: aString ifNone: aBlock [
+
+	^ changes detect: [ :each | each name = aString ] ifNone: aBlock
+]
+
+{ #category : 'accessing' }
 CRReview >> changes [
 
 	^ changes
@@ -129,6 +142,50 @@ CRReview >> part: aName summary: aString [
 	"Answer a new part of the pull request, at the top of the tree"
 
 	^ root part: aName summary: aString
+]
+
+{ #category : 'refreshing' }
+CRReview >> reuse: anOldReview [
+	"Take the tree of anOldReview (a review of an earlier state of the branch): its parts and their notes, and each change placed where the change of the same name was, with its note, its moves, and its mark when its code is the same. A change anOldReview did not have goes next to a change of its class. Answer the changes left unfiled"
+
+	| partFor |
+	partFor := Dictionary new.
+	partFor at: anOldReview root put: root.
+	anOldReview items do: [ :each |
+			each isChange ifFalse: [
+					(partFor at: each parent) add: ((partFor at: each put: (CRPart name: each name summary: each summary))
+							 note: each note;
+							 yourself) ] ].
+	changes do: [ :each |
+			(anOldReview changeNamed: each name ifNone: [ nil ])
+				ifNotNil: [ :old |
+						partFor at: old parent ifPresent: [ :part | part add: each ].
+						each note: old note ]
+				ifNil: [
+						(anOldReview changes detect: [ :old | old baseClassName = each baseClassName and: [ old parent isNotNil ] ] ifNone: [ nil ])
+							ifNotNil: [ :sibling | (partFor at: sibling parent) add: each ] ] ].
+	self reuseMovesOf: anOldReview.
+	self reuseMarksOf: anOldReview.
+	^ self unfiled
+]
+
+{ #category : 'refreshing' }
+CRReview >> reuseMarksOf: anOldReview [
+	"A change keeps its mark when its code did not change; parts follow their changes"
+
+	changes do: [ :each |
+			(anOldReview changeNamed: each name ifNone: [ nil ]) ifNotNil: [ :old |
+				(old isReviewed and: [ old oldSource = each oldSource and: [ old newSource = each newSource ] ]) ifTrue: [
+					each reviewed: true ] ] ]
+]
+
+{ #category : 'refreshing' }
+CRReview >> reuseMovesOf: anOldReview [
+
+	anOldReview changes do: [ :old |
+			old origins do: [ :origin |
+					(self changeNamed: old name ifNone: [ nil ]) ifNotNil: [ :new |
+						(self changeNamed: origin name ifNone: [ nil ]) ifNotNil: [ :newOrigin | new movedFrom: newOrigin ] ] ] ]
 ]
 
 { #category : 'accessing' }

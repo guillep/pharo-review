@@ -18,24 +18,27 @@ Class {
 }
 
 { #category : 'icons' }
-CRChangePresenter class >> iconNameFor: aKind [
-	"The icon of a change of aKind: #added, #removed or #changed"
+CRChangePresenter class >> iconNameFor: aChange [
+	"Moved, added, removed or changed"
 
-	^ (Dictionary newFromPairs: #( #added #changeAdd #removed #changeRemove #changed #changeUpdate )) at: aKind
+	aChange isMoved ifTrue: [ ^ #glamorousRedo ].
+	^ (Dictionary newFromPairs: #( #added #changeAdd #removed #changeRemove #changed #changeUpdate )) at: aChange kind
 ]
 
 { #category : 'accessing' }
 CRChangePresenter >> change: anItemOrNil [
-	"Show anItemOrNil when it is a change; nothing otherwise"
+	"Show anItemOrNil when it is a change; nothing otherwise. Moved code is compared with where it came from; a modification with its old version; an addition or a removal is shown alone"
 
 	change := (anItemOrNil isNotNil and: [ anItemOrNil isChange ]) ifTrue: [ anItemOrNil ].
 	change ifNil: [ ^ self layout: SpBoxLayout newTopToBottom ].
 	icon image: ((self iconNamed: self iconName) scaledToSize: 32 @ 32).
-	label label: self verb , '   ' , change name.
-	change kind = #changed
+	label label: self headline.
+	self showsDiff
 		ifTrue: [
 				diff
-					leftText: change oldSource;
+					leftText: (change isMoved
+							 ifTrue: [ change originSource ]
+							 ifFalse: [ change oldSource ]);
 					rightText: change newSource ]
 		ifFalse: [ self showCode ].
 	self layout: (SpBoxLayout newTopToBottom
@@ -45,7 +48,7 @@ CRChangePresenter >> change: anItemOrNil [
 					  add: label;
 					  yourself)
 			 height: 40;
-			 add: (change kind = #changed
+			 add: (self showsDiff
 					  ifTrue: [ diff ]
 					  ifFalse: [ code ]);
 			 yourself)
@@ -70,9 +73,22 @@ CRChangePresenter >> diff [
 ]
 
 { #category : 'accessing' }
+CRChangePresenter >> headline [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  nextPutAll: self verb;
+				  nextPutAll: '   ';
+				  nextPutAll: change name.
+			  change isMoved ifTrue: [
+					  stream nextPutAll: '   from   '.
+					  stream nextPutAll: (', ' join: (change origins collect: [ :each | each name ])) ] ]
+]
+
+{ #category : 'accessing' }
 CRChangePresenter >> iconName [
 
-	^ self class iconNameFor: change kind
+	^ self class iconNameFor: change
 ]
 
 { #category : 'initialization' }
@@ -120,7 +136,14 @@ CRChangePresenter >> showCode [
 ]
 
 { #category : 'accessing' }
+CRChangePresenter >> showsDiff [
+
+	^ change isMoved or: [ change kind = #changed ]
+]
+
+{ #category : 'accessing' }
 CRChangePresenter >> verb [
 
+	change isMoved ifTrue: [ ^ 'Moved' ].
 	^ (Dictionary newFromPairs: #( #added 'Added' #removed 'Removed' #changed 'Changed' )) at: change kind
 ]

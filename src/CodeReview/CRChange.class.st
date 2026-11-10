@@ -6,6 +6,7 @@ I am one change of a pull request: a method, a class definition or a file, added
 - protocol: the method's protocol (nil for a class definition or a file).
 - path: the file, for a file change (a file of a package not loaded in the image, or not code).
 - commitMessages: why, from the history: the messages of the commits that touched me, oldest first. A commit that renamed my class does not lead back to the commits before it.
+- origins / destinations: code moved or extracted. movedFrom: links me to the changes my code came from (a removal, or the old version of a modification); the tool then compares my code with theirs.
 "
 Class {
 	#name : 'CRChange',
@@ -19,7 +20,9 @@ Class {
 		'oldSource',
 		'newSource',
 		'protocol',
-		'commitMessages'
+		'commitMessages',
+		'origins',
+		'destinations'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -30,6 +33,12 @@ CRChange class >> kind: aSymbol from: anOldString to: aNewString [
 	"aSymbol is #added, #removed or #changed. Say then what I change: packageName:className:selector: or path:"
 
 	^ self new setKind: aSymbol from: anOldString to: aNewString
+]
+
+{ #category : 'moves' }
+CRChange >> addDestination: aChange [
+
+	destinations := self destinations copyWith: aChange
 ]
 
 { #category : 'accessing' }
@@ -68,6 +77,16 @@ CRChange >> description [
 						  nextPutAll: ' (';
 						  nextPutAll: packageName;
 						  nextPutAll: ')' ].
+			  self origins do: [ :each |
+					  stream
+						  cr;
+						  nextPutAll: 'Moved from: ';
+						  nextPutAll: each name ].
+			  self destinations do: [ :each |
+					  stream
+						  cr;
+						  nextPutAll: 'Moved to: ';
+						  nextPutAll: each name ].
 			  self commitMessages ifNotEmpty: [ :messages |
 					  stream
 						  cr;
@@ -78,6 +97,13 @@ CRChange >> description [
 								  cr;
 								  cr;
 								  nextPutAll: each trimBoth ] ] ]
+]
+
+{ #category : 'moves' }
+CRChange >> destinations [
+	"The changes my old code was moved or extracted to"
+
+	^ destinations ifNil: [ #(  ) ]
 ]
 
 { #category : 'accessing' }
@@ -124,6 +150,13 @@ CRChange >> isMethod [
 	^ selector isNotNil
 ]
 
+{ #category : 'moves' }
+CRChange >> isMoved [
+	"Whether my code came from other changes"
+
+	^ self origins isNotEmpty
+]
+
 { #category : 'accessing' }
 CRChange >> key [
 	"What identifies what I change across commits"
@@ -150,6 +183,15 @@ CRChange >> lineCount [
 	^ count
 ]
 
+{ #category : 'moves' }
+CRChange >> movedFrom: aChange [
+	"My code was moved or extracted from aChange (its old source)"
+
+	(self origins includes: aChange) ifTrue: [ ^ self ].
+	origins := self origins copyWith: aChange.
+	aChange addDestination: self
+]
+
 { #category : 'accessing' }
 CRChange >> name [
 	"What I change: Class>>selector, a class, or a file"
@@ -169,6 +211,20 @@ CRChange >> newSource [
 CRChange >> oldSource [
 
 	^ oldSource
+]
+
+{ #category : 'moves' }
+CRChange >> originSource [
+	"The code mine was moved from: the old source of my origins"
+
+	^ String cr , String cr join: (self origins collect: [ :each | each oldSource ])
+]
+
+{ #category : 'moves' }
+CRChange >> origins [
+	"The changes my code was moved or extracted from"
+
+	^ origins ifNil: [ #(  ) ]
 ]
 
 { #category : 'accessing' }

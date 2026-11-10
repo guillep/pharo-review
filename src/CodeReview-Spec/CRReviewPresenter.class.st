@@ -74,10 +74,10 @@ CRReviewPresenter >> export [
 
 { #category : 'actions' }
 CRReviewPresenter >> iconFor: anItem [
-	"Added, removed or changed, for a change; none for a part"
+	"Moved, added, removed or changed, for a change; none for a part"
 
 	anItem isChange ifFalse: [ ^ nil ].
-	^ self iconNamed: (CRChangePresenter iconNameFor: anItem kind)
+	^ self iconNamed: (CRChangePresenter iconNameFor: anItem)
 ]
 
 { #category : 'initialization' }

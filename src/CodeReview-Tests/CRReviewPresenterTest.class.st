@@ -123,6 +123,32 @@ CRReviewPresenterTest >> testChangesHaveAnIconForTheirKind [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testMovedCodeIsComparedWithWhereItCameFrom [
+
+	| removal addition |
+	removal := (CRChange
+		            kind: #removed
+		            from: 'old
+	^ 1'
+		            to: nil)
+		           packageName: 'P' className: 'B' selector: #old;
+		           yourself.
+	addition := (CRChange kind: #added from: nil to: 'new
+	^ 1')
+		            packageName: 'P' className: 'A' selector: #new;
+		            yourself.
+	addition movedFrom: removal.
+	presenter changeView change: addition.
+
+	self
+		assert: presenter changeView isShowingDiff;
+		assert: presenter changeView diff leftText equals: 'old
+	^ 1';
+		assert: (presenter changeView label label includesSubstring: 'Moved   A>>new   from   B>>old');
+		assert: (removal description includesSubstring: 'Moved to: A>>new')
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 
 	self select: change.
