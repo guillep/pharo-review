@@ -47,11 +47,30 @@ CRReviewPresenterTest >> testAChangeShowsItsDiff [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testAChangeShowsWhyFromItsCommits [
+
+	change commitMessages: #( 'Add foo
+
+Because bar needs it' ).
+	self select: change.
+
+	self assert: (presenter summary text asString includesSubstring: 'Because bar needs it')
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testAPartShowsItsPurpose [
 
 	self select: part.
 
 	self assert: (presenter summary text asString includesSubstring: 'Code: The code')
+]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> testChangesHaveAnIconForTheirKind [
+
+	self
+		assert: (presenter iconFor: change) equals: (presenter iconNamed: #changeUpdate);
+		assert: (presenter iconFor: part) isNil
 ]
 
 { #category : 'tests' }
@@ -67,6 +86,19 @@ CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testTheMenuMarksTheSelectedItem [
+
+	self select: change.
+	presenter markSelected: true.
+
+	self
+		assert: change isReviewed;
+		assert: presenter reviewedCheckBox state.
+	presenter markSelected: false.
+	self deny: change isReviewed
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 
 	self select: change.
@@ -76,5 +108,6 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 	self
 		assert: change isReviewed;
 		assert: change note equals: 'Why?';
-		deny: part isReviewed
+		assert: part isReviewed;
+		assert: part note equals: ''
 ]

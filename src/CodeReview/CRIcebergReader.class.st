@@ -24,6 +24,18 @@ CRIcebergReader class >> repository: anIceRepository from: aCommit to: anotherCo
 ]
 
 { #category : 'reading' }
+CRIcebergReader >> addCommitMessagesTo: aCollectionOfChanges [
+	"Each change gets the messages of the commits in the range that touched what it changes"
+
+	| messages |
+	messages := Dictionary new.
+	self commitsInRange do: [ :commit |
+			(self changesFrom: commit ancestors first to: commit) do: [ :each |
+				(messages at: each key ifAbsentPut: [ OrderedCollection new ]) add: commit comment ] ].
+	aCollectionOfChanges do: [ :each | each commitMessages: (messages at: each key ifAbsent: [ #(  ) ]) ]
+]
+
+{ #category : 'reading' }
 CRIcebergReader >> changeFrom: anOperation in: aNode [
 	"A change for a method, a class definition or a file Iceberg reports changed; nil for anything else (packages, extensions, unchanged containers)"
 
@@ -59,20 +71,42 @@ CRIcebergReader >> changeFrom: anOperation in: aNode [
 
 { #category : 'reading' }
 CRIcebergReader >> changes [
-	"Every change from fromCommit to toCommit: the code changes Iceberg details, then the other changed files"
+	"Every change from fromCommit to toCommit: the code changes Iceberg details, then the other changed files; each knows the commits that touched it"
+
+	| changes |
+	changes := self changesFrom: fromCommit to: toCommit.
+	self addCommitMessagesTo: changes.
+	^ changes
+]
+
+{ #category : 'reading' }
+CRIcebergReader >> changesFrom: aCommit to: anotherCommit [
 
 	| changes covered |
 	changes := OrderedCollection new.
 	covered := Set new.
-	(IceDiff from: toCommit to: fromCommit) tree allChildrenDo: [ :node |
+	(IceDiff from: anotherCommit to: aCommit) tree allChildrenDo: [ :node |
 			| operation |
 			operation := node value.
 			operation definition isPackageDefinition ifTrue: [ covered add: operation definition name ].
 			operation definition isFileDefinition ifTrue: [ covered add: node path pathString ].
 			(self changeFrom: operation in: node) ifNotNil: [ :change | changes add: change ] ].
-	(toCommit changesTo: fromCommit) do: [ :each |
-		(self isCovered: each path by: covered) ifFalse: [ changes add: (self fileChangeAt: each path) ] ].
+	(anotherCommit changesTo: aCommit) do: [ :each |
+		(self isCovered: each path by: covered) ifFalse: [ changes add: (self fileChangeAt: each path from: aCommit to: anotherCommit) ] ].
 	^ changes
+]
+
+{ #category : 'reading' }
+CRIcebergReader >> commitsInRange [
+	"The commits after fromCommit up to toCommit, oldest first, following first parents"
+
+	| commits commit |
+	commits := OrderedCollection new.
+	commit := toCommit.
+	[ commit id = fromCommit id or: [ commit ancestors isEmpty ] ] whileFalse: [
+			commits addFirst: commit.
+			commit := commit ancestors first ].
+	^ commits
 ]
 
 { #category : 'reading' }
@@ -87,11 +121,11 @@ CRIcebergReader >> contentsAt: aPath in: aCommit [
 ]
 
 { #category : 'reading' }
-CRIcebergReader >> fileChangeAt: aPath [
+CRIcebergReader >> fileChangeAt: aPath from: aCommit to: anotherCommit [
 
 	| old new |
-	old := self contentsAt: aPath in: fromCommit.
-	new := self contentsAt: aPath in: toCommit.
+	old := self contentsAt: aPath in: aCommit.
+	new := self contentsAt: aPath in: anotherCommit.
 	^ (CRChange kind: (old ifNil: [ #added ] ifNotNil: [ new ifNil: [ #removed ] ifNotNil: [ #changed ] ]) from: old to: new)
 		  path: aPath pathString;
 		  yourself

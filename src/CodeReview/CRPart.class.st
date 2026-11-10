@@ -39,6 +39,15 @@ CRPart >> addAll: aCollection [
 ]
 
 { #category : 'accessing' }
+CRPart >> childReviewed: aBoolean [
+	"One of my children was marked (or unmarked): follow"
+
+	aBoolean
+		ifTrue: [ (reviewed not and: [ children allSatisfy: [ :each | each isReviewed ] ]) ifTrue: [ self reviewed: true ] ]
+		ifFalse: [ reviewed ifTrue: [ self reviewed: false ] ]
+]
+
+{ #category : 'accessing' }
 CRPart >> children [
 
 	^ children

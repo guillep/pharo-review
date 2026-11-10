@@ -51,9 +51,10 @@ CRReviewPresenter >> defaultLayout [
 		  positionOfSlider: 0.35;
 		  add: tree;
 		  add: (SpPanedLayout newTopToBottom
-				   positionOfSlider: 0.7;
-				   add: (SpBoxLayout newTopToBottom
-						    add: summary height: 60;
+				   positionOfSlider: 0.75;
+				   add: (SpPanedLayout newTopToBottom
+						    positionOfSlider: 0.3;
+						    add: summary;
 						    add: diff;
 						    yourself);
 				   add: (SpBoxLayout newTopToBottom
@@ -82,6 +83,15 @@ CRReviewPresenter >> export [
 	self inform: 'The review notes are in the clipboard'
 ]
 
+{ #category : 'actions' }
+CRReviewPresenter >> iconFor: anItem [
+	"Added, removed or changed, for a change; none for a part"
+
+	anItem isChange ifFalse: [ ^ nil ].
+	^ self iconNamed:
+		  ((Dictionary newFromPairs: #( #added #changeAdd #removed #changeRemove #changed #changeUpdate )) at: anItem kind)
+]
+
 { #category : 'initialization' }
 CRReviewPresenter >> initializePresenters [
 
@@ -89,6 +99,8 @@ CRReviewPresenter >> initializePresenters [
 		        roots: review root children;
 		        children: [ :each | each children ];
 		        display: [ :each | self labelFor: each ];
+		        displayIcon: [ :each | self iconFor: each ];
+		        contextMenu: [ self reviewMenu ];
 		        whenSelectionChangedDo: [ :selection | self show: selection selectedItem ];
 		        yourself.
 	summary := self newText
@@ -146,10 +158,37 @@ CRReviewPresenter >> markReviewed: aBoolean [
 	tree refresh
 ]
 
+{ #category : 'actions' }
+CRReviewPresenter >> markSelected: aBoolean [
+	"Mark the selected item from the menu, and show the new mark"
+
+	tree selectedItem ifNil: [ ^ self ].
+	tree selectedItem reviewed: aBoolean.
+	tree refresh.
+	self show: tree selectedItem
+]
+
 { #category : 'accessing - tests' }
 CRReviewPresenter >> note [
 
 	^ note
+]
+
+{ #category : 'actions' }
+CRReviewPresenter >> reviewMenu [
+
+	^ self newMenu
+		  addGroup: [ :group |
+				  group
+					  addItem: [ :item |
+							  item
+								  name: 'Mark reviewed';
+								  action: [ self markSelected: true ] ];
+					  addItem: [ :item |
+							  item
+								  name: 'Mark not reviewed';
+								  action: [ self markSelected: false ] ] ];
+		  yourself
 ]
 
 { #category : 'accessing - tests' }

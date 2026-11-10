@@ -129,8 +129,10 @@ CRItem >> place [
 
 { #category : 'accessing' }
 CRItem >> reviewed: aBoolean [
+	"Mark me. A part is reviewed when everything under it is: marking my last unreviewed sibling marks my parent, and unmarking me unmarks my parents. Marking a part leaves its children as they are"
 
-	reviewed := aBoolean
+	reviewed := aBoolean.
+	parent ifNotNil: [ :part | part childReviewed: aBoolean ]
 ]
 
 { #category : 'accessing' }

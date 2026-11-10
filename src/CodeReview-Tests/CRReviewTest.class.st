@@ -134,12 +134,11 @@ CRReviewTest >> testMarkdownHasTheNotesThenWhatIsNotReviewed [
 		reviewed: true;
 		note: 'Why 2?'.
 	part note: 'Split this'.
-	added reviewed: true.
 
 	markdown := review markdown.
 
 	self
-		assert: (markdown includesSubstring: '2 of 5 items reviewed.');
+		assert: (markdown includesSubstring: '1 of 5 items reviewed.');
 		assert: (markdown includesSubstring: '### Code (not reviewed)
 
 Split this' withUnixLineEndings);
@@ -147,7 +146,25 @@ Split this' withUnixLineEndings);
 
 Why 2?' withUnixLineEndings);
 		assert: (markdown includesSubstring: '- Unrelated › .project changed');
-		deny: (markdown includesSubstring: 'A>>foo')
+		assert: (markdown includesSubstring: '- Code › A>>foo added')
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testMarkingTheLastChildMarksTheParents [
+
+	| part sub |
+	part := review part: 'All' summary: ''.
+	sub := part part: 'Code' summary: ''.
+	sub addAll: {
+			added.
+			changed }.
+	added reviewed: true.
+	self deny: sub isReviewed.
+	changed reviewed: true.
+
+	self
+		assert: sub isReviewed;
+		assert: part isReviewed
 ]
 
 { #category : 'tests' }
@@ -183,4 +200,23 @@ CRReviewTest >> testUnfiledAreTheChangesInNoPart [
 	(review part: 'Code' summary: '') addAll: (review changesSuchThat: [ :each | each isMethod ]).
 
 	self assert: review unfiled asArray equals: { file }
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testUnmarkingAChildUnmarksTheParents [
+
+	| part sub |
+	part := review part: 'All' summary: ''.
+	sub := part part: 'Code' summary: ''.
+	sub addAll: {
+			added.
+			changed }.
+	added reviewed: true.
+	changed reviewed: true.
+	changed reviewed: false.
+
+	self
+		deny: sub isReviewed;
+		deny: part isReviewed;
+		assert: added isReviewed
 ]

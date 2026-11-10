@@ -5,6 +5,7 @@ I am one change of a pull request: a method, a class definition or a file, added
 - packageName, className, selector: what I change; selector is nil for a class definition, className is nil for a file.
 - protocol: the method's protocol (nil for a class definition or a file).
 - path: the file, for a file change (a file of a package not loaded in the image, or not code).
+- commitMessages: why, from the history: the messages of the commits that touched me, oldest first. A commit that renamed my class does not lead back to the commits before it.
 "
 Class {
 	#name : 'CRChange',
@@ -17,7 +18,8 @@ Class {
 		'path',
 		'oldSource',
 		'newSource',
-		'protocol'
+		'protocol',
+		'commitMessages'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -37,6 +39,19 @@ CRChange >> className [
 ]
 
 { #category : 'accessing' }
+CRChange >> commitMessages [
+	"The messages of the commits that touched me, oldest first"
+
+	^ commitMessages ifNil: [ #(  ) ]
+]
+
+{ #category : 'accessing' }
+CRChange >> commitMessages: aCollection [
+
+	commitMessages := aCollection
+]
+
+{ #category : 'accessing' }
 CRChange >> description [
 
 	^ String streamContents: [ :stream |
@@ -45,7 +60,17 @@ CRChange >> description [
 					  stream
 						  nextPutAll: ' (';
 						  nextPutAll: packageName;
-						  nextPutAll: ')' ] ]
+						  nextPutAll: ')' ].
+			  self commitMessages ifNotEmpty: [ :messages |
+					  stream
+						  cr;
+						  cr;
+						  nextPutAll: 'Why (the commits that touched it):'.
+					  messages do: [ :each |
+							  stream
+								  cr;
+								  cr;
+								  nextPutAll: each trimBoth ] ] ]
 ]
 
 { #category : 'accessing' }
@@ -70,6 +95,13 @@ CRChange >> isFile [
 CRChange >> isMethod [
 
 	^ selector isNotNil
+]
+
+{ #category : 'accessing' }
+CRChange >> key [
+	"What identifies what I change across commits"
+
+	^ self name
 ]
 
 { #category : 'accessing' }

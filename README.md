@@ -48,8 +48,10 @@ For tests, give the changes by hand: `CRReview title: 'pr' changes: { ... }`.
 
 ## The tool
 
-- **Left:** the tree. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note.
-- **Right:** a part's summary, or a change's old/new diff; the Reviewed mark and the note of the selected item. Marking a part reviewed does not mark its children.
+- **Left:** the tree. Each change has an icon for added, removed or changed. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note. Right-click marks an item reviewed or not.
+- **Right:** a part's summary, or a change's old/new diff with why it was made (the messages of the commits that touched it); the Reviewed mark and the note of the selected item.
+- **Marks:** a part is reviewed when everything under it is: marking the last child marks the part, unmarking a child unmarks its parts. Marking a part does not mark its children.
+- **Why** comes from the history: a commit that renamed a class does not lead back to the commits before the rename.
 - **Browse** opens the changed method or class. **Export** copies the notes to the clipboard as Markdown: progress, every item with a note (its place in the tree, reviewed or not), then the items not reviewed yet.
 
 Not yet: reshaping the tree in the tool, saving a review between sessions.
