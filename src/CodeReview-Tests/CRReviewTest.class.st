@@ -64,14 +64,64 @@ CRReviewTest >> testAChangeIsInOnePartOnly [
 ]
 
 { #category : 'tests' }
-CRReviewTest >> testAPartMarkedReviewedLeavesItsChildren [
+CRReviewTest >> testAPartKeepsItsSubPartsFirstThenItsChangesInOrder [
 
-	| part |
+	| part sub |
+	part := review part: 'All' summary: ''.
+	part addAll: {
+			file.
+			changed.
+			added }.
+	sub := part part: 'Sub' summary: ''.
+
+	self assert: part children asArray equals: {
+			sub.
+			changed.
+			added.
+			file }
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testAPartMarkedReviewedMarksItsChildren [
+
+	| part sub |
 	part := review part: 'Code' summary: ''.
-	part add: added.
+	sub := part part: 'Sub' summary: ''.
+	sub add: added.
+	part add: changed.
 	part reviewed: true.
 
+	self
+		assert: sub isReviewed;
+		assert: added isReviewed;
+		assert: changed isReviewed.
+	part reviewed: false.
 	self deny: added isReviewed
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testChangesAreOrderedByClassDefinitionFirstThenSelector [
+
+	| definition meta ordered |
+	definition := (CRChange kind: #added from: nil to: 'Object subclass: #A')
+		              packageName: 'P' className: 'A' selector: nil;
+		              yourself.
+	meta := (CRChange kind: #added from: nil to: 'new')
+		        packageName: 'P' className: 'A class' selector: #new;
+		        yourself.
+	ordered := (CRReview title: 'pr' changes: {
+			            file.
+			            meta.
+			            added.
+			            definition.
+			            changed }) changes.
+
+	self assert: ordered asArray equals: {
+			definition.
+			changed.
+			added.
+			meta.
+			file }
 ]
 
 { #category : 'tests' }
@@ -115,8 +165,8 @@ CRReviewTest >> testGroupByMovesTheChangesIntoSubParts [
 	self
 		assert: (groups collect: [ :each | each name ]) asArray equals: #( 'A' 'Files' );
 		assert: groups first children asArray equals: {
-				added.
-				changed };
+				changed.
+				added };
 		assert: part children asArray equals: groups asArray;
 		assert: changed place equals: 'All › A › A>>bar changed'
 ]

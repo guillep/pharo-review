@@ -76,6 +76,13 @@ CRItem >> lineCount [
 	^ self subclassResponsibility
 ]
 
+{ #category : 'private' }
+CRItem >> markWithChildren: aBoolean [
+
+	reviewed := aBoolean.
+	self children do: [ :each | each markWithChildren: aBoolean ]
+]
+
 { #category : 'accessing' }
 CRItem >> newSource [
 	"What I am after the pull request: empty unless I am a change"
@@ -129,9 +136,9 @@ CRItem >> place [
 
 { #category : 'accessing' }
 CRItem >> reviewed: aBoolean [
-	"Mark me. A part is reviewed when everything under it is: marking my last unreviewed sibling marks my parent, and unmarking me unmarks my parents. Marking a part leaves its children as they are"
+	"Mark me, and everything under me. A part is reviewed when everything under it is: marking my last unreviewed sibling marks my parent, and unmarking me unmarks my parents"
 
-	reviewed := aBoolean.
+	self markWithChildren: aBoolean.
 	parent ifNotNil: [ :part | part childReviewed: aBoolean ]
 ]
 

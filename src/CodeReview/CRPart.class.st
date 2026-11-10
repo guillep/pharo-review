@@ -23,10 +23,16 @@ CRPart class >> name: aName summary: aString [
 
 { #category : 'accessing' }
 CRPart >> add: anItem [
-	"anItem is in one place only: it leaves its previous part"
+	"anItem is in one place only: it leaves its previous part. My sub-parts come first, in the order they were added (the reading order); then my changes, in the review's order (CRChange>>sortsBefore:)"
 
+	| index |
 	anItem parent ifNotNil: [ :previous | previous remove: anItem ].
-	children add: anItem.
+	index := anItem isChange
+		         ifTrue: [ children findFirst: [ :each | each isChange and: [ anItem sortsBefore: each ] ] ]
+		         ifFalse: [ children findFirst: [ :each | each isChange ] ].
+	index = 0
+		ifTrue: [ children addLast: anItem ]
+		ifFalse: [ children add: anItem beforeIndex: index ].
 	anItem parent: self.
 	^ anItem
 ]
@@ -40,11 +46,14 @@ CRPart >> addAll: aCollection [
 
 { #category : 'accessing' }
 CRPart >> childReviewed: aBoolean [
-	"One of my children was marked (or unmarked): follow"
+	"One of my children was marked (or unmarked): I am reviewed when all of them are. Unmarking leaves my other children as they are"
 
 	aBoolean
 		ifTrue: [ (reviewed not and: [ children allSatisfy: [ :each | each isReviewed ] ]) ifTrue: [ self reviewed: true ] ]
-		ifFalse: [ reviewed ifTrue: [ self reviewed: false ] ]
+		ifFalse: [
+				reviewed ifTrue: [
+						reviewed := false.
+						parent ifNotNil: [ :part | part childReviewed: false ] ] ]
 ]
 
 { #category : 'accessing' }

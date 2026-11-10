@@ -33,6 +33,13 @@ CRChange class >> kind: aSymbol from: anOldString to: aNewString [
 ]
 
 { #category : 'accessing' }
+CRChange >> baseClassName [
+	"The class I change, without ' class' for the class side"
+
+	^ className ifNotNil: [ className copyReplaceAll: ' class' with: '' ]
+]
+
+{ #category : 'accessing' }
 CRChange >> className [
 
 	^ className
@@ -102,6 +109,13 @@ CRChange >> isChange [
 CRChange >> isFile [
 
 	^ className isNil
+]
+
+{ #category : 'accessing' }
+CRChange >> isMeta [
+	"Whether I change the class side"
+
+	^ className isNotNil and: [ className endsWith: ' class' ]
 ]
 
 { #category : 'accessing' }
@@ -219,6 +233,19 @@ CRChange >> sizeLabel [
 			  stream
 				  print: self lineCount;
 				  nextPutAll: ' lines' ]
+]
+
+{ #category : 'comparing' }
+CRChange >> sortsBefore: aChange [
+	"The order of changes in a review: code before files; by class, its definition before its methods, instance side before class side; then by selector"
+
+	self isFile = aChange isFile ifFalse: [ ^ aChange isFile ].
+	self isFile ifTrue: [ ^ path <= aChange path ].
+	self baseClassName = aChange baseClassName ifFalse: [ ^ self baseClassName < aChange baseClassName ].
+	self isMethod = aChange isMethod ifFalse: [ ^ aChange isMethod ].
+	self isMethod ifFalse: [ ^ true ].
+	self isMeta = aChange isMeta ifFalse: [ ^ aChange isMeta ].
+	^ selector <= aChange selector
 ]
 
 { #category : 'accessing' }

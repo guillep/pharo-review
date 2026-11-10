@@ -140,9 +140,10 @@ CRReview >> root [
 
 { #category : 'accessing' }
 CRReview >> setTitle: aString changes: aCollection [
+	"The changes are kept in the review's order (see CRChange>>sortsBefore:), so any part filled from them is in that order"
 
 	root := CRPart name: aString summary: ''.
-	changes := aCollection asOrderedCollection
+	changes := (aCollection asSortedCollection: [ :a :b | a sortsBefore: b ]) asOrderedCollection
 ]
 
 { #category : 'accessing' }
