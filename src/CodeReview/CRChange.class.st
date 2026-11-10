@@ -47,8 +47,8 @@ CRChange >> addedWords [
 
 	self isFile ifTrue: [ ^ #(  ) ].
 	kind = #removed ifTrue: [ ^ #(  ) ].
-	kind = #added ifTrue: [ ^ CRVocabulary wordsIn: newSource ].
-	^ CRVocabulary wordsIn: newSource onLines: self insertedLineNumbers
+	kind = #added ifTrue: [ ^ CRVocabulary wordsIn: (self codeOf: newSource) ].
+	^ CRVocabulary wordsIn: (self codeOf: newSource) onLines: self insertedLineNumbers
 ]
 
 { #category : 'accessing' }
@@ -62,6 +62,16 @@ CRChange >> baseClassName [
 CRChange >> className [
 
 	^ className
+]
+
+{ #category : 'vocabulary' }
+CRChange >> codeOf: aSource [
+	"aSource without the class comment: Iceberg writes a class definition, an empty line, then the comment"
+
+	| end |
+	selector ifNotNil: [ ^ aSource ].
+	end := aSource lines indexOf: '' ifAbsent: [ ^ aSource ].
+	^ String cr join: (aSource lines first: end - 1)
 ]
 
 { #category : 'accessing' }
@@ -295,7 +305,7 @@ CRChange >> oldWords [
 	"The words of the code before me"
 
 	(self isFile or: [ oldSource isNil ]) ifTrue: [ ^ #(  ) ].
-	^ CRVocabulary wordsIn: oldSource
+	^ CRVocabulary wordsIn: (self codeOf: oldSource)
 ]
 
 { #category : 'moves' }

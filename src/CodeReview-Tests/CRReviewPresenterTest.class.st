@@ -227,3 +227,24 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 		assert: part isReviewed;
 		assert: part note equals: ''
 ]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> testWordsSortByOccurrences [
+
+	| other |
+	other := (CRChange kind: #added from: nil to: 'zork
+	^ new')
+		         packageName: 'P' className: 'A' selector: #zork;
+		         yourself.
+	review := CRReview title: 'pr' changes: {
+			          change.
+			          other }.
+	(review part: 'Code' summary: 'The code') addAll: {
+			change.
+			other }.
+	presenter := CRReviewPresenter on: review.
+	presenter groupByList selectItem: 'Vocabulary'.
+	self assert: (presenter tree roots collect: [ :each | each title ]) asArray equals: #( 'new (new)' 'zork (new)' ).
+	presenter sortList selectItem: 'Occurrences'.
+	self assert: presenter tree roots first title equals: 'new (new)'
+]

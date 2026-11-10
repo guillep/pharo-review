@@ -48,6 +48,7 @@ CRVocabulary class >> normalize: aWord [
 
 { #category : 'extracting' }
 CRVocabulary class >> splitCamelCase: aString [
+	"aString split before capitals (keeping acronyms) and around numbers"
 
 	| words current |
 	words := OrderedCollection new.
@@ -56,11 +57,12 @@ CRVocabulary class >> splitCamelCase: aString [
 			| previous next |
 			previous := index > 1 ifTrue: [ aString at: index - 1 ].
 			next := index < aString size ifTrue: [ aString at: index + 1 ].
-			(char isUppercase and: [
-				 previous notNil and: [ previous isLowercase or: [ previous isUppercase and: [ next notNil and: [ next isLowercase ] ] ] ] ])
-				ifTrue: [
-						words add: current contents.
-						current := WriteStream on: String new ].
+			(previous notNil and: [
+					 (char isUppercase and: [
+						  previous isLowercase or: [ previous isDigit or: [ previous isUppercase and: [ next notNil and: [ next isLowercase ] ] ] ] ])
+						 or: [ char isDigit ~= previous isDigit ] ]) ifTrue: [
+					words add: current contents.
+					current := WriteStream on: String new ].
 			char isAlphaNumeric ifTrue: [ current nextPut: char ] ].
 	words add: current contents.
 	^ words reject: [ :each | each isEmpty ]
@@ -98,10 +100,11 @@ CRVocabulary class >> wordsIn: aSource onLines: aSetOfLineNumbersOrNil [
 
 { #category : 'extracting' }
 CRVocabulary class >> wordsOf: anIdentifier [
-	"anIdentifier split at colons and capitals (an acronym stays one word: MVSGraph -> mvs, graph), normalized, without the words that say nothing"
+	"anIdentifier split at colons and capitals (an acronym stays one word: MVSGraph -> mvs, graph), normalized, without numbers and the words that say nothing"
 
 	| words |
 	words := OrderedCollection new.
 	(anIdentifier substrings: ':') do: [ :part | words addAll: (self splitCamelCase: part) ].
-	^ (words collect: [ :each | self normalize: each ]) reject: [ :each | each size < 2 or: [ self stopWords includes: each ] ]
+	^ (words collect: [ :each | self normalize: each ]) reject: [ :each |
+		  each size < 2 or: [ each isAllDigits or: [ self stopWords includes: each ] ] ]
 ]

@@ -64,6 +64,13 @@ CRWord >> lineCount [
 ]
 
 { #category : 'accessing' }
+CRWord >> occurrences [
+	"How many changes add me"
+
+	^ changes size
+]
+
+{ #category : 'accessing' }
 CRWord >> reviewed: aBoolean [
 	"Mark my changes, in their parts"
 

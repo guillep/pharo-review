@@ -98,6 +98,22 @@ CRReviewTest >> testAChangeIsInOnePartOnly [
 		assert: added parent equals: second
 ]
 
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testAClassCommentHasNoVocabulary [
+
+	| definition |
+	definition := (CRChange kind: #added from: nil to: 'Object subclass: #Graph
+	instanceVariableNames: ''''
+	classVariableNames: ''''
+	poolDictionaries: ''''
+	category: ''P''
+
+I keep repositories')
+		              packageName: 'P' className: 'Graph' selector: nil;
+		              yourself.
+	self deny: (definition addedWords includes: 'repository')
+]
+
 { #category : 'tests' }
 CRReviewTest >> testACompleteReviewChecks [
 
@@ -308,6 +324,12 @@ CRReviewTest >> testMarkingTheLastChildMarksTheParents [
 	self
 		assert: sub isReviewed;
 		assert: part isReviewed
+]
+
+{ #category : 'tests - vocabulary' }
+CRReviewTest >> testNumbersAreNotWords [
+
+	self assert: (CRVocabulary wordsOf: 'test00Version35') asArray equals: #( 'test' 'version' )
 ]
 
 { #category : 'tests - accessors' }

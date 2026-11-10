@@ -17,7 +17,8 @@ Class {
 		'exportButton',
 		'changeView',
 		'hideAccessorsCheckBox',
-		'groupByList'
+		'groupByList',
+		'sortList'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -49,6 +50,7 @@ CRReviewPresenter >> defaultLayout [
 		  add: (SpBoxLayout newTopToBottom
 				   add: (SpBoxLayout newLeftToRight
 						    add: groupByList;
+						    add: sortList;
 						    addLast: hideAccessorsCheckBox expand: false;
 						    yourself)
 				   expand: false;
@@ -129,6 +131,11 @@ CRReviewPresenter >> initializePresenters [
 		               display: [ :each | 'Group by: ' , each ];
 		               whenSelectedItemChangedDo: [ self updateTree ];
 		               yourself.
+	sortList := self newDropList
+		            items: #( 'Alphabetical' 'Occurrences' );
+		            display: [ :each | 'Sort: ' , each ];
+		            whenSelectedItemChangedDo: [ self updateTree ];
+		            yourself.
 	summary := self newText
 		           beNotEditable;
 		           yourself.
@@ -225,11 +232,13 @@ CRReviewPresenter >> reviewedCheckBox [
 
 { #category : 'tree' }
 CRReviewPresenter >> roots [
-	"The parts of the review, or its words"
+	"The parts of the review, or its words in the chosen order"
 
-	| roots |
-	roots := groupByList selectedItem = 'Vocabulary'
-		         ifTrue: [ review vocabulary ]
+	| byVocabulary roots |
+	byVocabulary := groupByList selectedItem = 'Vocabulary'.
+	sortList enabled: byVocabulary.
+	roots := byVocabulary
+		         ifTrue: [ self sortWords: review vocabulary ]
 		         ifFalse: [ review root children ].
 	^ roots select: [ :each | each shows: self filter ]
 ]
@@ -255,6 +264,23 @@ CRReviewPresenter >> show: anItemOrNil [
 		enabled: (anItemOrNil isNotNil and: [ anItemOrNil acceptsNote ]).
 	browseButton enabled: (anItemOrNil isNotNil and: [ anItemOrNil isBrowsable ]).
 	current := anItemOrNil
+]
+
+{ #category : 'tree' }
+CRReviewPresenter >> sortList [
+
+	^ sortList
+]
+
+{ #category : 'tree' }
+CRReviewPresenter >> sortWords: aCollectionOfWords [
+	"New words first, as the review gives them; then alphabetically or by the changes adding them, most first"
+
+	sortList selectedItem = 'Occurrences' ifFalse: [ ^ aCollectionOfWords ].
+	^ aCollectionOfWords asSortedCollection: [ :a :b |
+			  a isNew = b isNew
+				  ifTrue: [ a occurrences > b occurrences or: [ a occurrences = b occurrences and: [ a word <= b word ] ] ]
+				  ifFalse: [ a isNew ] ]
 ]
 
 { #category : 'accessing - tests' }
