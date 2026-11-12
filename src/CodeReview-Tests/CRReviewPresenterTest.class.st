@@ -147,6 +147,15 @@ CRReviewPresenterTest >> testChangesHaveAnIconForTheirKind [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testGroupingByNotesListsOnlyTheItemsWithANote [
+	change note: 'Why?'.
+	presenter groupByList selectItem: 'Notes'.
+	self
+		assert: presenter tree roots asArray equals: { change };
+		assert: (presenter childrenOf: change) isEmpty
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testGroupingByVocabularyShowsTheWords [
 
 	| zork |

@@ -29,9 +29,10 @@ CRReviewPresenter >> changeView [
 
 { #category : 'tree' }
 CRReviewPresenter >> childrenOf: anItem [
-	"What the tree shows under anItem: the words of a list in the chosen order"
+	"What the tree shows under anItem: the words of a list in the chosen order; nothing in the flat list of notes"
 
 	| children |
+	self showsNotes ifTrue: [ ^ #(  ) ].
 	children := anItem childrenShowing: self filter.
 	^ anItem isWordList
 		  ifTrue: [ self sortWords: children ]
@@ -119,7 +120,7 @@ CRReviewPresenter >> initializePresenters [
 		                         whenChangedDo: [ self updateTree ];
 		                         yourself.
 	groupByList := self newDropList
-		               items: #( 'Parts' 'Vocabulary' );
+		               items: #( 'Parts' 'Vocabulary' 'Notes' );
 		               display: [ :each | 'Group by: ' , each ];
 		               whenSelectedItemChangedDo: [ self updateTree ];
 		               yourself.
@@ -234,11 +235,12 @@ CRReviewPresenter >> reviewedCheckBox [
 
 { #category : 'tree' }
 CRReviewPresenter >> roots [
-	"The parts of the review, or the words of its code and of its tests"
+	"The parts of the review, the words of its code and of its tests, or the items with a note"
 
 	| byVocabulary |
 	byVocabulary := groupByList selectedItem = 'Vocabulary'.
 	sortList enabled: byVocabulary.
+	self showsNotes ifTrue: [ ^ review items select: [ :each | each hasNote ] ].
 	^ (byVocabulary
 		   ifTrue: [ review vocabulary ]
 		   ifFalse: [ review root children ]) select: [ :each | each shows: self filter ]
@@ -255,6 +257,13 @@ CRReviewPresenter >> show: anItemOrNil [
 	"Show anItemOrNil in the Item tab (the description of the pull request has its own tab)"
 
 	item show: anItemOrNil
+]
+
+{ #category : 'testing' }
+CRReviewPresenter >> showsNotes [
+	"Whether the tree lists only the items with a note, flat"
+
+	^ groupByList selectedItem = 'Notes'
 ]
 
 { #category : 'tree' }
