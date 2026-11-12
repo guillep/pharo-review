@@ -17,7 +17,8 @@ Class {
 		'root',
 		'changes',
 		'vocabulary',
-		'description'
+		'description',
+		'pullRequestTitle'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -116,6 +117,15 @@ CRReview >> emptyParts [
 ]
 
 { #category : 'accessing' }
+CRReview >> heading [
+	"How the review is named on its window and its export: the title of the pull request when known, then what it compares"
+
+	^ pullRequestTitle
+		  ifNil: [ self title ]
+		  ifNotNil: [ :prTitle | prTitle , ' (' , self title , ')' ]
+]
+
+{ #category : 'accessing' }
 CRReview >> items [
 	"Every part and change, depth first"
 
@@ -142,7 +152,7 @@ CRReview >> markdown [
 	^ String streamContents: [ :stream |
 			  stream
 				  nextPutAll: '# Review: ';
-				  nextPutAll: self title;
+				  nextPutAll: self heading;
 				  lf;
 				  lf;
 				  print: (items count: [ :each | each isReviewed ]);
@@ -193,6 +203,18 @@ CRReview >> part: aName summary: aString [
 	"Answer a new part of the pull request, at the top of the tree"
 
 	^ root part: aName summary: aString
+]
+
+{ #category : 'accessing' }
+CRReview >> pullRequestTitle [
+	^ pullRequestTitle
+]
+
+{ #category : 'accessing' }
+CRReview >> pullRequestTitle: aString [
+	"The title of the pull request under review"
+
+	pullRequestTitle := aString
 ]
 
 { #category : 'refreshing' }

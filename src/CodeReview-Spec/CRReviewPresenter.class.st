@@ -149,7 +149,7 @@ CRReviewPresenter >> initializeWindow: aWindowPresenter [
 
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
-		title: 'Review: ' , review title;
+		title: 'Review: ' , review heading;
 		initialExtent: 1300 @ 850
 ]
 

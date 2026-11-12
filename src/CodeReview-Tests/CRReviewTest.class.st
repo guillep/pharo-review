@@ -435,6 +435,15 @@ CRReviewTest >> testSplitsIdentifiersIntoNormalizedWords [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testTheHeadingNamesThePullRequest [
+	self assert: review heading equals: review title.
+	review pullRequestTitle: 'Fix the loader'.
+	self
+		assert: review heading equals: 'Fix the loader (' , review title , ')';
+		assert: (review markdown beginsWith: '# Review: Fix the loader (' , review title , ')')
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testTheProtocolARepositoryWritesDoesNotMatter [
 	| change |
 	change := (CRChange kind: #changed from: 'old' to: '"running"' , (CRReviewTest >> #setUp) sourceCode)
