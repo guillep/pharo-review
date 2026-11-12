@@ -16,7 +16,8 @@ Class {
 	#instVars : [
 		'root',
 		'changes',
-		'vocabulary'
+		'vocabulary',
+		'description'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -94,6 +95,20 @@ CRReview >> computeVocabulary [
 ]
 
 { #category : 'accessing' }
+CRReview >> description [
+	"The description of the pull request under review (Markdown), empty when none was given"
+
+	^ description ifNil: [ '' ]
+]
+
+{ #category : 'accessing' }
+CRReview >> description: aString [
+	"The description of the pull request under review: the reviewer may edit it in the tool, and the export carries it back"
+
+	description := aString
+]
+
+{ #category : 'accessing' }
 CRReview >> emptyParts [
 	"The parts that hold nothing: the tool would show them as 0 items"
 
@@ -118,7 +133,7 @@ CRReview >> lineCount [
 
 { #category : 'exporting' }
 CRReview >> markdown [
-	"The reviewer's notes, for the chat: a header with the progress, every item with a note (its place, whether it is reviewed), then the items not reviewed yet"
+	"The reviewer's notes, for the chat: a header with the progress, the pull request description when there is one (as the reviewer may have edited it), every item with a note (its place, whether it is reviewed), then the items not reviewed yet"
 
 	| items noted pending |
 	items := self items.
@@ -135,6 +150,14 @@ CRReview >> markdown [
 				  print: items size;
 				  nextPutAll: ' items reviewed.';
 				  lf.
+			  self description ifNotEmpty: [ :text |
+					  stream
+						  lf;
+						  nextPutAll: '## Pull request description';
+						  lf;
+						  lf;
+						  nextPutAll: text trimBoth;
+						  lf ].
 			  noted ifNotEmpty: [
 					  stream
 						  lf;

@@ -226,6 +226,16 @@ CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testShowingAnItemLeavesTheDescriptionAlone [
+	review description: 'The goal'.
+	self select: part.
+	self
+		assert: presenter summary text asString equals: part description;
+		deny: presenter summary isEditable;
+		assert: review description equals: 'The goal'
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testTheMenuMarksTheSelectedItem [
 
 	self select: change.
@@ -250,6 +260,17 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 		assert: change note equals: 'Why?';
 		assert: part isReviewed;
 		assert: part note equals: ''
+]
+
+{ #category : 'tests' }
+CRReviewPresenterTest >> testWithNothingSelectedTheDescriptionIsShownAndEdited [
+	review description: 'The goal'.
+	presenter showDescription.
+	self
+		assert: presenter summary text asString equals: 'The goal';
+		assert: presenter summary isEditable.
+	presenter summary text: 'The new goal'.
+	self assert: review description equals: 'The new goal'
 ]
 
 { #category : 'tests' }

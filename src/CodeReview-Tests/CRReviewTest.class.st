@@ -225,6 +225,12 @@ CRReviewTest >> testGroupByMovesTheChangesIntoSubParts [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testMarkdownCarriesThePullRequestDescription [
+	review description: 'Fixes the loader' , String lf , 'and its tests'.
+	self assert: (review markdown includesSubstring: ('## Pull request description' , String lf , String lf , 'Fixes the loader' , String lf , 'and its tests'))
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testMarkdownHasTheNotesThenWhatIsNotReviewed [
 
 	| part markdown |
@@ -250,6 +256,11 @@ Split this' withUnixLineEndings);
 Why 2?' withUnixLineEndings);
 		assert: (markdown includesSubstring: '- Unrelated › .project changed');
 		assert: (markdown includesSubstring: '- Code › A>>foo added')
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testMarkdownLeavesOutAnEmptyDescription [
+	self deny: (review markdown includesSubstring: 'Pull request description')
 ]
 
 { #category : 'tests - vocabulary' }

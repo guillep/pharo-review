@@ -18,7 +18,9 @@ Class {
 		'changeView',
 		'hideAccessorsCheckBox',
 		'groupByList',
-		'sortList'
+		'sortList',
+		'descriptionButton',
+		'showsDescription'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -78,6 +80,7 @@ CRReviewPresenter >> defaultLayout [
 						    add: (SpBoxLayout newLeftToRight
 								     add: reviewedCheckBox;
 								     addLast: browseButton expand: false;
+								     addLast: descriptionButton expand: false;
 								     addLast: exportButton expand: false;
 								     yourself)
 						    expand: false;
@@ -85,6 +88,11 @@ CRReviewPresenter >> defaultLayout [
 						    yourself);
 				   yourself);
 		  yourself
+]
+
+{ #category : 'accessing' }
+CRReviewPresenter >> descriptionButton [
+	^ descriptionButton
 ]
 
 { #category : 'actions' }
@@ -149,6 +157,7 @@ CRReviewPresenter >> initializePresenters [
 		            yourself.
 	summary := self newText
 		           beNotEditable;
+		           whenTextChangedDo: [ :text | showsDescription == true ifTrue: [ review description: text asString ] ];
 		           yourself.
 	changeView := self instantiate: CRChangePresenter.
 	reviewedCheckBox := self newCheckBox
@@ -163,6 +172,10 @@ CRReviewPresenter >> initializePresenters [
 		                label: 'Browse';
 		                action: [ self browseCurrent ];
 		                yourself.
+	descriptionButton := self newButton
+		                     label: 'Description';
+		                     action: [ self showDescription ];
+		                     yourself.
 	exportButton := self newButton
 		                label: 'Export';
 		                action: [ self export ];
@@ -261,10 +274,20 @@ CRReviewPresenter >> setModelBeforeInitialization: aReview [
 
 { #category : 'tree' }
 CRReviewPresenter >> show: anItemOrNil [
-	"Show anItemOrNil on the right: what it is and why, and the change itself"
+	"Show anItemOrNil on the right: what it is and why, and the change itself. With nothing selected, the description of the pull request, which the reviewer may edit"
 
 	current := nil.
-	summary text: (anItemOrNil ifNil: [ review title ] ifNotNil: [ :item | item description ]).
+	showsDescription := false.
+	anItemOrNil
+		ifNil: [
+				summary
+					beEditable;
+					text: review description ]
+		ifNotNil: [ :item |
+				summary
+					beNotEditable;
+					text: item description ].
+	showsDescription := anItemOrNil isNil.
 	changeView change: anItemOrNil.
 	reviewedCheckBox
 		state: (anItemOrNil isNotNil and: [ anItemOrNil isReviewed ]);
@@ -274,6 +297,14 @@ CRReviewPresenter >> show: anItemOrNil [
 		enabled: (anItemOrNil isNotNil and: [ anItemOrNil acceptsNote ]).
 	browseButton enabled: (anItemOrNil isNotNil and: [ anItemOrNil isBrowsable ]).
 	current := anItemOrNil
+]
+
+{ #category : 'actions' }
+CRReviewPresenter >> showDescription [
+	"Select nothing, to show (and edit) the description of the pull request"
+
+	tree unselectAll.
+	self show: nil
 ]
 
 { #category : 'tree' }
