@@ -8,40 +8,22 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'review',
-		'current',
 		'tree',
-		'summary',
-		'reviewedCheckBox',
-		'note',
-		'browseButton',
 		'exportButton',
-		'changeView',
 		'hideAccessorsCheckBox',
 		'groupByList',
 		'sortList',
 		'description',
-		'tabs'
+		'tabs',
+		'item'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
 }
 
-{ #category : 'actions' }
-CRReviewPresenter >> browseCurrent [
-	"Browse the changed method, or the changed class when the method is gone"
-
-	| class |
-	class := current imageClass.
-	class ifNil: [ ^ self inform: current name , ' is not in the image' ].
-	(current isMethod and: [ class includesSelector: current selector asSymbol ])
-		ifTrue: [ (class >> current selector asSymbol) browse ]
-		ifFalse: [ class browse ]
-]
-
-{ #category : 'accessing - tests' }
+{ #category : 'accessing' }
 CRReviewPresenter >> changeView [
-
-^ changeView
+	^ item changeView
 ]
 
 { #category : 'tree' }
@@ -55,9 +37,8 @@ CRReviewPresenter >> childrenOf: anItem [
 		  ifFalse: [ children ]
 ]
 
-{ #category : 'tree' }
+{ #category : 'layout' }
 CRReviewPresenter >> defaultLayout [
-
 	^ SpPanedLayout newLeftToRight
 		  positionOfSlider: 0.35;
 		  add: (SpBoxLayout newTopToBottom
@@ -69,22 +50,12 @@ CRReviewPresenter >> defaultLayout [
 				   expand: false;
 				   add: tree;
 				   yourself);
-		  add: (SpPanedLayout newTopToBottom
-				   positionOfSlider: 0.75;
-				   add: (SpPanedLayout newTopToBottom
-						    positionOfSlider: 0.3;
-						    add: tabs;
-						    add: changeView;
-						    yourself);
-				   add: (SpBoxLayout newTopToBottom
-						    add: (SpBoxLayout newLeftToRight
-								     add: reviewedCheckBox;
-								     addLast: browseButton expand: false;
-								     addLast: exportButton expand: false;
-								     yourself)
-						    expand: false;
-						    add: note;
-						    yourself);
+		  add: (SpBoxLayout newTopToBottom
+				   add: (SpBoxLayout newLeftToRight
+						    addLast: exportButton expand: false;
+						    yourself)
+				   expand: false;
+				   add: tabs;
 				   yourself);
 		  yourself
 ]
@@ -134,7 +105,6 @@ CRReviewPresenter >> iconFor: anItem [
 
 { #category : 'initialization' }
 CRReviewPresenter >> initializePresenters [
-
 	tree := self newTree
 		        children: [ :each | self childrenOf: each ];
 		        display: [ :each | self labelFor: each ];
@@ -156,28 +126,14 @@ CRReviewPresenter >> initializePresenters [
 		            display: [ :each | 'Sort: ' , each ];
 		            whenSelectedItemChangedDo: [ self updateTree ];
 		            yourself.
-	summary := self newText
-		           beNotEditable;
-		           yourself.
-	changeView := self instantiate: CRChangePresenter.
-	reviewedCheckBox := self newCheckBox
-		                    label: 'Reviewed';
-		                    whenChangedDo: [ :value | self markReviewed: value ];
-		                    yourself.
-	note := self newText
-		        placeholder: 'Note';
-		        whenTextChangedDo: [ :text | current ifNotNil: [ current note: text asString ] ];
-		        yourself.
-	browseButton := self newButton
-		                label: 'Browse';
-		                action: [ self browseCurrent ];
-		                yourself.
+	item := self instantiate: CRItemPresenter on: review.
+	item whenReviewedDo: [ tree refresh ].
 	description := self newText
 		               text: review description;
 		               whenTextChangedDo: [ :text | review description: text asString ];
 		               yourself.
 	tabs := self newNotebook
-		        addPageTitle: 'Item' provider: [ summary ];
+		        addPageTitle: 'Item' provider: [ item ];
 		        addPageTitle: 'Pull request' provider: [ description ];
 		        yourself.
 	exportButton := self newButton
@@ -196,6 +152,11 @@ CRReviewPresenter >> initializeWindow: aWindowPresenter [
 		initialExtent: 1300 @ 850
 ]
 
+{ #category : 'accessing' }
+CRReviewPresenter >> item [
+	^ item
+]
+
 { #category : 'tree' }
 CRReviewPresenter >> labelFor: anItem [
 
@@ -212,14 +173,6 @@ CRReviewPresenter >> labelFor: anItem [
 ]
 
 { #category : 'actions' }
-CRReviewPresenter >> markReviewed: aBoolean [
-
-	current ifNil: [ ^ self ].
-	current reviewed: aBoolean.
-	tree refresh
-]
-
-{ #category : 'actions' }
 CRReviewPresenter >> markSelected: aBoolean [
 	"Mark the selected item from the menu, and show the new mark"
 
@@ -229,10 +182,9 @@ CRReviewPresenter >> markSelected: aBoolean [
 	self show: tree selectedItem
 ]
 
-{ #category : 'accessing - tests' }
+{ #category : 'accessing' }
 CRReviewPresenter >> note [
-
-	^ note
+	^ item note
 ]
 
 { #category : 'actions' }
@@ -252,10 +204,9 @@ CRReviewPresenter >> reviewMenu [
 		  yourself
 ]
 
-{ #category : 'accessing - tests' }
+{ #category : 'accessing' }
 CRReviewPresenter >> reviewedCheckBox [
-
-	^ reviewedCheckBox
+	^ item reviewedCheckBox
 ]
 
 { #category : 'tree' }
@@ -276,21 +227,11 @@ CRReviewPresenter >> setModelBeforeInitialization: aReview [
 	review := aReview
 ]
 
-{ #category : 'tree' }
+{ #category : 'showing' }
 CRReviewPresenter >> show: anItemOrNil [
-	"Show anItemOrNil on the right: what it is and why, and the change itself (the description of the pull request has its own tab)"
+	"Show anItemOrNil in the Item tab (the description of the pull request has its own tab)"
 
-	current := nil.
-	summary text: (anItemOrNil ifNil: [ review title ] ifNotNil: [ :item | item description ]).
-	changeView change: anItemOrNil.
-	reviewedCheckBox
-		state: (anItemOrNil isNotNil and: [ anItemOrNil isReviewed ]);
-		enabled: anItemOrNil isNotNil.
-	note
-		text: (anItemOrNil ifNil: [ '' ] ifNotNil: [ :item | item note ]);
-		enabled: (anItemOrNil isNotNil and: [ anItemOrNil acceptsNote ]).
-	browseButton enabled: (anItemOrNil isNotNil and: [ anItemOrNil isBrowsable ]).
-	current := anItemOrNil
+	item show: anItemOrNil
 ]
 
 { #category : 'tree' }
@@ -310,10 +251,9 @@ CRReviewPresenter >> sortWords: aCollectionOfWords [
 				  ifFalse: [ a isNew ] ]
 ]
 
-{ #category : 'accessing - tests' }
+{ #category : 'accessing' }
 CRReviewPresenter >> summary [
-
-	^ summary
+	^ item summary
 ]
 
 { #category : 'accessing' }

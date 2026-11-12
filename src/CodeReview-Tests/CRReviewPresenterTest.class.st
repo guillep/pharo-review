@@ -237,6 +237,13 @@ CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testTheItemTabShowsTheItem [
+	self
+		assert: (presenter tabs pages collect: [ :each | each title ]) asArray equals: #( 'Item' 'Pull request' );
+		assert: (presenter tabs pages first presenterProvider value) identicalTo: presenter item
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testTheMenuMarksTheSelectedItem [
 
 	self select: change.

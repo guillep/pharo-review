@@ -114,6 +114,16 @@ CRChange >> destinations [
 	^ destinations ifNil: [ #(  ) ]
 ]
 
+{ #category : 'private' }
+CRChange >> formatted: aMethodSource [
+	"aMethodSource formatted, without the protocol a repository writes before it (""private"")"
+
+	| source |
+	source := aMethodSource trimLeft.
+	(source beginsWith: '"') ifTrue: [ source := (source copyAfter: $") copyAfter: $" ].
+	^ (OCParser parseMethod: source) formattedCode
+]
+
 { #category : 'accessing' }
 CRChange >> imageClass [
 	"The class I change, as the image has it now; nil for a file or a class the image does not have"
@@ -140,10 +150,11 @@ CRChange >> isAccessor [
 	^ (self isGetter: method) or: [ self isSetter: method ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'testing' }
 CRChange >> isBrowsable [
+	"Browsing makes sense only when the image has my code as the change leaves it"
 
-	^ self isFile not
+	^ self matchesImage
 ]
 
 { #category : 'accessing' }
@@ -247,6 +258,20 @@ CRChange >> lineCount [
 CRChange >> lineCountShowing: aBlock [
 
 	^ self lineCount
+]
+
+{ #category : 'testing' }
+CRChange >> matchesImage [
+	"Whether the image has my code as the change leaves it, so that browsing it shows what is reviewed: a method with my new code (compared formatted: the repository adds its protocol and lays it out its own way), a removed method gone. A class must be in the image (its definition is not compared); a removed class or a file never matches"
+
+	| class symbol |
+	self isFile ifTrue: [ ^ false ].
+	class := self imageClass.
+	class ifNil: [ ^ false ].
+	self isMethod ifFalse: [ ^ kind ~= #removed ].
+	symbol := selector asSymbol.
+	kind = #removed ifTrue: [ ^ (class includesSelector: symbol) not ].
+	^ (class includesSelector: symbol) and: [ (self formatted: (class >> symbol) sourceCode) = (self formatted: newSource) ]
 ]
 
 { #category : 'moves' }

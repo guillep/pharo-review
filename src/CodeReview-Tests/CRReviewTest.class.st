@@ -69,6 +69,24 @@ CRReviewTest >> testAChangeInAPartEmptiedAgainIsUnfiled [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testAChangeIsBrowsableOnlyWhenTheImageHasItsCode [
+	| matching other gone |
+	matching := (CRChange kind: #changed from: 'old' to: (CRReviewTest >> #setUp) sourceCode)
+		            packageName: 'CodeReview-Tests' className: 'CRReviewTest' selector: #setUp;
+		            yourself.
+	other := (CRChange kind: #changed from: 'old' to: 'setUp ^ 1')
+		         packageName: 'CodeReview-Tests' className: 'CRReviewTest' selector: #setUp;
+		         yourself.
+	gone := (CRChange kind: #removed from: 'foo ^ 1' to: nil)
+		        packageName: 'CodeReview-Tests' className: 'CRReviewTest' selector: #aSelectorNobodyDefines;
+		        yourself.
+	self
+		assert: matching isBrowsable;
+		deny: other isBrowsable;
+		assert: gone isBrowsable
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testAChangeIsInOnePartOnly [
 
 	| first second |
@@ -414,6 +432,15 @@ CRReviewTest >> testSplitsIdentifiersIntoNormalizedWords [
 		assert: (CRVocabulary wordsOf: 'at:resolvedProjects:') asArray equals: #( 'resolved' 'project' );
 		assert: (CRVocabulary wordsOf: 'MetacelloMVSGraph') asArray equals: #( 'metacello' 'mvs' 'graph' );
 		assert: (CRVocabulary wordsOf: 'dependencies') asArray equals: #( 'dependency' )
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testTheProtocolARepositoryWritesDoesNotMatter [
+	| change |
+	change := (CRChange kind: #changed from: 'old' to: '"running"' , (CRReviewTest >> #setUp) sourceCode)
+		          packageName: 'CodeReview-Tests' className: 'CRReviewTest' selector: #setUp;
+		          yourself.
+	self assert: change isBrowsable
 ]
 
 { #category : 'tests' }
