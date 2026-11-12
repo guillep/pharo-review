@@ -154,6 +154,13 @@ CRReview >> lineCount [
 	^ changes inject: 0 into: [ :sum :each | sum + each lineCount ]
 ]
 
+{ #category : 'reviewing' }
+CRReview >> markAllReviewed [
+	"Mark every part and change reviewed"
+
+	self items do: [ :each | each reviewed: true ]
+]
+
 { #category : 'exporting' }
 CRReview >> markdown [
 	"The reviewer's notes, for the chat: a header with the progress, the pull request description when there is one (as the reviewer may have edited it), the note on the description and every item with a note (its place, whether it is reviewed), then the items not reviewed yet"

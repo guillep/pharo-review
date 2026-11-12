@@ -15,7 +15,8 @@ Class {
 		'sortList',
 		'tabs',
 		'item',
-		'pullRequest'
+		'pullRequest',
+		'markAllButton'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -52,6 +53,7 @@ CRReviewPresenter >> defaultLayout [
 				   yourself);
 		  add: (SpBoxLayout newTopToBottom
 				   add: (SpBoxLayout newLeftToRight
+						    addLast: markAllButton expand: false;
 						    addLast: exportButton expand: false;
 						    yourself)
 				   expand: false;
@@ -134,6 +136,10 @@ CRReviewPresenter >> initializePresenters [
 		        addPageTitle: 'Pull request' provider: [ pullRequest ];
 		        selectPageIndex: 2;
 		        yourself.
+	markAllButton := self newButton
+		                 label: 'Mark all as reviewed';
+		                 action: [ self markAllReviewed ];
+		                 yourself.
 	exportButton := self newButton
 		                label: 'Export';
 		                action: [ self export ];
@@ -168,6 +174,20 @@ CRReviewPresenter >> labelFor: anItem [
 				  nextPutAll: (anItem sizeLabelShowing: self filter);
 				  nextPutAll: ')'.
 			  anItem hasNote ifTrue: [ stream nextPutAll: '  ✎' ] ]
+]
+
+{ #category : 'accessing' }
+CRReviewPresenter >> markAllButton [
+	^ markAllButton
+]
+
+{ #category : 'actions' }
+CRReviewPresenter >> markAllReviewed [
+	"Mark every item reviewed, and show the marks"
+
+	review markAllReviewed.
+	tree refresh.
+	self show: tree selectedItem
 ]
 
 { #category : 'actions' }

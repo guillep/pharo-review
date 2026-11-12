@@ -188,6 +188,14 @@ CRReviewPresenterTest >> testHidingAccessorsHidesThePartsLeftEmpty [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testMarkAllAsReviewed [
+	presenter markAllButton click.
+	self
+		assert: part isReviewed;
+		assert: change isReviewed
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testMovedCodeIsComparedWithWhereItCameFrom [
 
 	| removal addition |
