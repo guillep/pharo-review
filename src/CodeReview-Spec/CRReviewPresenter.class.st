@@ -13,9 +13,9 @@ Class {
 		'hideAccessorsCheckBox',
 		'groupByList',
 		'sortList',
-		'description',
 		'tabs',
-		'item'
+		'item',
+		'pullRequest'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -64,7 +64,7 @@ CRReviewPresenter >> defaultLayout [
 CRReviewPresenter >> description [
 	"The text of the pull request description, in its own tab: the reviewer edits it there"
 
-	^ description
+	^ pullRequest description
 ]
 
 { #category : 'actions' }
@@ -128,13 +128,10 @@ CRReviewPresenter >> initializePresenters [
 		            yourself.
 	item := self instantiate: CRItemPresenter on: review.
 	item whenReviewedDo: [ tree refresh ].
-	description := self newText
-		               text: review description;
-		               whenTextChangedDo: [ :text | review description: text asString ];
-		               yourself.
+	pullRequest := self instantiate: CRPullRequestPresenter on: review.
 	tabs := self newNotebook
 		        addPageTitle: 'Item' provider: [ item ];
-		        addPageTitle: 'Pull request' provider: [ description ];
+		        addPageTitle: 'Pull request' provider: [ pullRequest ];
 		        selectPageIndex: 2;
 		        yourself.
 	exportButton := self newButton
@@ -186,6 +183,11 @@ CRReviewPresenter >> markSelected: aBoolean [
 { #category : 'accessing' }
 CRReviewPresenter >> note [
 	^ item note
+]
+
+{ #category : 'accessing' }
+CRReviewPresenter >> pullRequest [
+	^ pullRequest
 ]
 
 { #category : 'actions' }

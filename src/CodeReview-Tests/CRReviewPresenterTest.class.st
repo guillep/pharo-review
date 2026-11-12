@@ -262,6 +262,12 @@ CRReviewPresenterTest >> testTheMenuMarksTheSelectedItem [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testTheNoteOnTheDescriptionGoesToTheReview [
+	presenter pullRequest note text: 'Shorter, please'.
+	self assert: review descriptionNote equals: 'Shorter, please'
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testThePullRequestDescriptionIsEditedInItsTab [
 	review description: 'The goal'.
 	presenter := CRReviewPresenter on: review.

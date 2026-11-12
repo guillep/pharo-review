@@ -249,6 +249,12 @@ CRReviewTest >> testMarkdownCarriesThePullRequestDescription [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testMarkdownHasTheNoteOnTheDescription [
+	review descriptionNote: 'Shorter, please'.
+	self assert: (review markdown includesSubstring: ('## Notes' , String lf , String lf , '### Pull request description' , String lf , String lf , 'Shorter, please'))
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testMarkdownHasTheNotesThenWhatIsNotReviewed [
 
 	| part markdown |

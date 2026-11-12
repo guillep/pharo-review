@@ -18,7 +18,8 @@ Class {
 		'changes',
 		'vocabulary',
 		'description',
-		'pullRequestTitle'
+		'pullRequestTitle',
+		'descriptionNote'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -110,6 +111,18 @@ CRReview >> description: aString [
 ]
 
 { #category : 'accessing' }
+CRReview >> descriptionNote [
+	"The reviewer's note on the pull request description, empty when none"
+
+	^ descriptionNote ifNil: [ '' ]
+]
+
+{ #category : 'accessing' }
+CRReview >> descriptionNote: aString [
+	descriptionNote := aString
+]
+
+{ #category : 'accessing' }
 CRReview >> emptyParts [
 	"The parts that hold nothing: the tool would show them as 0 items"
 
@@ -143,7 +156,7 @@ CRReview >> lineCount [
 
 { #category : 'exporting' }
 CRReview >> markdown [
-	"The reviewer's notes, for the chat: a header with the progress, the pull request description when there is one (as the reviewer may have edited it), every item with a note (its place, whether it is reviewed), then the items not reviewed yet"
+	"The reviewer's notes, for the chat: a header with the progress, the pull request description when there is one (as the reviewer may have edited it), the note on the description and every item with a note (its place, whether it is reviewed), then the items not reviewed yet"
 
 	| items noted pending |
 	items := self items.
@@ -168,11 +181,19 @@ CRReview >> markdown [
 						  lf;
 						  nextPutAll: text trimBoth;
 						  lf ].
-			  noted ifNotEmpty: [
+			  (noted notEmpty or: [ self descriptionNote notEmpty ]) ifTrue: [
 					  stream
 						  lf;
 						  nextPutAll: '## Notes';
 						  lf.
+					  self descriptionNote ifNotEmpty: [ :text |
+							  stream
+								  lf;
+								  nextPutAll: '### Pull request description';
+								  lf;
+								  lf;
+								  nextPutAll: text trimBoth;
+								  lf ].
 					  noted do: [ :each |
 							  stream
 								  lf;
