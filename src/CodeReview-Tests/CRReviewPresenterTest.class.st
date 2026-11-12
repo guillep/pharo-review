@@ -214,6 +214,17 @@ CRReviewPresenterTest >> testMovedCodeIsComparedWithWhereItCameFrom [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testSelectingAnItemKeepsThePullRequestDescription [
+	review description: 'The goal'.
+	presenter := CRReviewPresenter on: review.
+	self select: part.
+	self
+		assert: presenter summary text asString equals: part description;
+		assert: presenter description text asString equals: 'The goal';
+		assert: review description equals: 'The goal'
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 
 	self select: change.
@@ -223,16 +234,6 @@ CRReviewPresenterTest >> testSelectingAnotherItemKeepsTheFirstOnesNote [
 	self
 		assert: change note equals: 'Why?';
 		assert: part note equals: ''
-]
-
-{ #category : 'tests' }
-CRReviewPresenterTest >> testShowingAnItemLeavesTheDescriptionAlone [
-	review description: 'The goal'.
-	self select: part.
-	self
-		assert: presenter summary text asString equals: part description;
-		deny: presenter summary isEditable;
-		assert: review description equals: 'The goal'
 ]
 
 { #category : 'tests' }
@@ -249,6 +250,17 @@ CRReviewPresenterTest >> testTheMenuMarksTheSelectedItem [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testThePullRequestDescriptionIsEditedInItsTab [
+	review description: 'The goal'.
+	presenter := CRReviewPresenter on: review.
+	self
+		assert: (presenter tabs pages collect: [ :each | each title ]) asArray equals: #( 'Item' 'Pull request' );
+		assert: presenter description text asString equals: 'The goal'.
+	presenter description text: 'The new goal'.
+	self assert: review description equals: 'The new goal'
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 
 	self select: change.
@@ -260,17 +272,6 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 		assert: change note equals: 'Why?';
 		assert: part isReviewed;
 		assert: part note equals: ''
-]
-
-{ #category : 'tests' }
-CRReviewPresenterTest >> testWithNothingSelectedTheDescriptionIsShownAndEdited [
-	review description: 'The goal'.
-	presenter showDescription.
-	self
-		assert: presenter summary text asString equals: 'The goal';
-		assert: presenter summary isEditable.
-	presenter summary text: 'The new goal'.
-	self assert: review description equals: 'The new goal'
 ]
 
 { #category : 'tests' }
