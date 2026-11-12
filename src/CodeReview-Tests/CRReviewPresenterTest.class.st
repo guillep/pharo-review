@@ -214,6 +214,11 @@ CRReviewPresenterTest >> testMovedCodeIsComparedWithWhereItCameFrom [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testOpensOnThePullRequestTab [
+	self assert: presenter tabs selectedPage title equals: 'Pull request'
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testSelectingAnItemKeepsThePullRequestDescription [
 	review description: 'The goal'.
 	presenter := CRReviewPresenter on: review.

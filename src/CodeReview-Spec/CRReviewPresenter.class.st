@@ -135,6 +135,7 @@ CRReviewPresenter >> initializePresenters [
 	tabs := self newNotebook
 		        addPageTitle: 'Item' provider: [ item ];
 		        addPageTitle: 'Pull request' provider: [ description ];
+		        selectPageIndex: 2;
 		        yourself.
 	exportButton := self newButton
 		                label: 'Export';
