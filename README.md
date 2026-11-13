@@ -9,7 +9,7 @@ The changes of the pull request are grouped into a tree: the things the pull req
 ```smalltalk
 Metacello new
 	baseline: 'CodeReview';
-	repository: 'tonel://path/to/pharo-review/src';
+	repository: 'github://guillep/pharo-review:main/src';
 	load.
 ```
 
@@ -64,11 +64,16 @@ For tests, give the changes by hand: `CRReview title: 'pr' changes: { ... }`.
 
 ## The tool
 
-- **Left:** the tree. **Group by** shows it by parts or by vocabulary, with the code and the tests apart: each word of the class and method names the pull request adds (split at camel case, lowercased, plurals dropped, no numbers), sorted alphabetically or by how many changes add it, marked "(new)" when the code before did not use it. **Hide accessors** hides plain getters and setters, and the parts left empty; sizes count what is shown. Each change has an icon for added, removed or changed. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note. Right-click marks an item reviewed or not.
+- **Left:** the tree. **Group by** shows it by parts, by notes (only the items with a note, flat, to go through them again), or by vocabulary, with the code and the tests apart: each word of the class and method names the pull request adds (split at camel case, lowercased, plurals dropped, no numbers), sorted alphabetically or by how many changes add it, marked "(new)" when the code before did not use it. **Hide accessors** hides plain getters and setters, and the parts left empty; sizes count what is shown. Each change has an icon for added, removed or changed. Each item shows a check when reviewed, its size (lines changed, and items for a part), and a pencil when it has a note. Right-click marks an item reviewed or not.
 - **Right:** a part's summary, or a change's old/new diff with why it was made (the messages of the commits that touched it); the Reviewed mark and the note of the selected item.
 - **Marks:** marking a part marks everything under it. A part is reviewed when everything under it is: marking the last child marks the part, unmarking a child unmarks its parts (not its siblings).
 - **Order:** in a part, sub-parts come first in the order they were added; then changes, always in the same order: code before files, by class, the class definition first, then instance-side methods, then class-side ones, by selector.
 - **Why** comes from the history: a commit that renamed a class does not lead back to the commits before the rename.
+- **Mark all as reviewed** and **Unmark all** set or clear every mark at once. The **Pull request** tab holds the pull request description, editable, with a note on it.
 - **Browse** opens the changed method or class. **Export** copies the notes to the clipboard as Markdown: progress, every item with a note (its place in the tree, reviewed or not), then the items not reviewed yet.
 
 Not yet: reshaping the tree in the tool, saving a review between sessions.
+
+## Reviewing with an agent
+
+`.agents/skills/pharo-review/SKILL.md` tells a coding agent how to prepare a review with this tool: size the pull request, group its changes into a tree, open the tool, then work through the exported notes one at a time. It uses the Agent Skills format; `.claude/skills/pharo-review` links to the same folder. To use it in other projects, copy or link that folder into the agent's skills folder (for example `~/.claude/skills/` or `~/.agents/skills/`).
