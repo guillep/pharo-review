@@ -44,6 +44,9 @@ review emptyParts.       "the parts holding nothing"
 "Rename a part, keeping what it holds"
 objects name: 'Add the resolution objects'.
 
+"Why a change was made, beyond its commit messages: from what the agent knows (a design decision, a review note). Shown above the commit messages"
+(review changeNamed: 'MetacelloUserRequest>>chainNames') why: 'Answers an immutable array, so no collection is shared'.
+
 "Moved or extracted code: the tool compares the new code with where it came from"
 (review changeNamed: 'MetacelloVersionSpec>>loadableSpecsFor:')
 	movedFrom: (review changeNamed: 'MetacelloRecordTarget>>listLoadableSpecsFrom:').
