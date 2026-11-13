@@ -9,7 +9,19 @@ The work is split in two:
 
 The tool can be filled by hand too, but it is meant to be filled by the agent.
 
+## Install
+
+For an agent, from a clone of this repository:
+
+```sh
+./install.sh
+```
+
+It links the skill (`.agents/skills/pharo-review`) into `~/.claude/skills` and `~/.agents/skills`, so the agent finds it in every project and it follows this clone. The agent then loads the tool into the image itself, through MCP, with the expression below.
+
 ## Load
+
+In the image, by hand or by the agent through MCP:
 
 ```smalltalk
 Metacello new

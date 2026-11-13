@@ -5,7 +5,15 @@ description: Use when the user wants to review a pull request or a branch of a P
 
 # Reviewing a Pharo pull request
 
-The user reviews; the agent prepares the review. Work in the running image through the tools it offers (for example a Pharo MCP server), and load this repository's `CodeReview` baseline first (see README.md). The full API is in README.md.
+The user reviews; the agent prepares the review. Work in the running image through the tools it offers (for example a Pharo MCP server). If the image has no `CRReview` class, load the tool first:
+
+```smalltalk
+Metacello new
+	baseline: 'CodeReview';
+	repository: 'github://guillep/pharo-review:main/src';
+	load.
+```
+ The full API is in README.md.
 
 Give the review the pull request title (`review pullRequestTitle: '...'`, which names the window and the export) and its description, drafted or taken from GitHub (`review description: '...'`). The tool shows the description, editable, in its Pull request tab, and the Markdown export carries it under "Pull request description". Use the exported text as the pull request body, or to update an open one (`gh pr edit --body-file`).
 

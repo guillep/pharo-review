@@ -7,3 +7,4 @@ CodeReview: a Pharo tool to review a big pull request top-down, as a tree of wha
 - Run `CodeReview-Tests` after any change; tests build reviews by hand (`CRReview title:changes:`) and never touch the network.
 - The API and the tool are described in README.md; keep it up to date when either changes.
 - To review a pull request with this tool, follow the skill in `.agents/skills/pharo-review/SKILL.md`.
+- To install the skill for agents on this machine, run `./install.sh`.
