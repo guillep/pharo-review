@@ -1,8 +1,13 @@
 # pharo-review
 
-A tool to review a big pull request in a Pharo image, top-down.
+A tool for agent-aided reviews of big Pharo pull requests, top-down.
 
-The changes of the pull request are grouped into a tree: the things the pull request does (parts), split into smaller parts, down to the changes themselves (a method, a class definition or a file, added, removed or changed). The reviewer goes through the tree, marks items reviewed, writes notes, and exports the notes as Markdown.
+The work is split in two:
+
+- **The agent fills the tool.** A coding agent, working in the image through MCP, reads the pull request and groups its changes into a tree: the things the pull request does (parts), split into smaller parts, down to the changes themselves (a method, a class definition or a file, added, removed or changed). It names each part, says why, links moved code, and opens the tool. It uses the API below; the skill in `.agents/skills/pharo-review/SKILL.md` tells it how (see [Reviewing with an agent](#reviewing-with-an-agent)).
+- **The person reviews.** The reviewer goes through the tree, marks items reviewed, writes notes, and exports the notes as Markdown. The agent then works through them with the reviewer, one at a time.
+
+The tool can be filled by hand too, but it is meant to be filled by the agent.
 
 ## Load
 
@@ -14,6 +19,8 @@ Metacello new
 ```
 
 ## API
+
+What the agent calls, through MCP, to fill the tool.
 
 ```smalltalk
 "Every change between two commits of an Iceberg repository (a commit id, or 'HEAD')"
