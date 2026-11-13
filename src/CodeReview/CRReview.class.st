@@ -261,7 +261,8 @@ CRReview >> reuse: anOldReview [
 			(anOldReview changeNamed: each name ifNone: [ nil ])
 				ifNotNil: [ :old |
 						partFor at: old parent ifPresent: [ :part | part add: each ].
-						each note: old note ]
+						each note: old note.
+						each why: old why ]
 				ifNil: [
 						(anOldReview changes detect: [ :old | old baseClassName = each baseClassName and: [ old parent isNotNil ] ] ifNone: [ nil ])
 							ifNotNil: [ :sibling | (partFor at: sibling parent) add: each ] ] ].

@@ -22,7 +22,8 @@ Class {
 		'protocol',
 		'commitMessages',
 		'origins',
-		'destinations'
+		'destinations',
+		'why'
 	],
 	#category : 'CodeReview',
 	#package : 'CodeReview'
@@ -95,7 +96,14 @@ CRChange >> description [
 						  cr;
 						  nextPutAll: 'Moved to: ';
 						  nextPutAll: each name ].
-			  self commitMessages ifNotEmpty: [ :messages |
+			  why ifNotEmpty: [
+			  stream
+				  cr;
+				  cr;
+				  nextPutAll: 'Why:';
+				  cr;
+				  nextPutAll: why ].
+		  self commitMessages ifNotEmpty: [ :messages |
 					  stream
 						  cr;
 						  cr;
@@ -135,6 +143,13 @@ CRChange >> imageClass [
 	^ (className endsWith: ' class')
 		  ifTrue: [ class class ]
 		  ifFalse: [ class ]
+]
+
+{ #category : 'initialization' }
+CRChange >> initialize [
+
+	super initialize.
+	why := ''
 ]
 
 { #category : 'accessors' }
@@ -433,4 +448,17 @@ CRChange >> title [
 				  nextPutAll: self name;
 				  space;
 				  nextPutAll: kind ]
+]
+
+{ #category : 'accessing' }
+CRChange >> why [
+	"Why I was made, as the agent knows it beyond the commit messages (a design decision, a review note); empty when the commits say it all"
+
+	^ why
+]
+
+{ #category : 'accessing' }
+CRChange >> why: aString [
+
+	why := aString
 ]

@@ -102,6 +102,16 @@ CRReviewTest >> testAChangeIsInOnePartOnly [
 ]
 
 { #category : 'tests' }
+CRReviewTest >> testAChangeShowsTheWhyOfTheAgentBeforeItsCommits [
+
+	added why: 'Answers an immutable array, so no collection is shared (review note 5)'.
+
+	self assert: (added description includesSubstring:
+			 (String cr join: #( 'Why:' 'Answers an immutable array, so no collection is shared (review note 5)' ))).
+	self deny: (changed description includesSubstring: 'Why:')
+]
+
+{ #category : 'tests' }
 CRReviewTest >> testACompleteReviewChecks [
 
 	(review part: 'Code' summary: '') addAll: review changes.
@@ -374,6 +384,21 @@ CRReviewTest >> testRenamingAPartKeepsWhatItHolds [
 
 	self assert: part name equals: 'Change the code'.
 	self assert: review unfiled isEmpty
+]
+
+{ #category : 'tests' }
+CRReviewTest >> testReuseKeepsTheWhyOfTheAgent [
+
+	| newAdded newer |
+	added why: 'Asked in the review'.
+	newAdded := (CRChange kind: #added from: nil to: added newSource)
+		            packageName: 'P' className: 'A' selector: #foo;
+		            yourself.
+	(review part: 'Code' summary: 'The code') addAll: review changes copy.
+	newer := CRReview title: 'pr' changes: { newAdded }.
+	newer reuse: review.
+
+	self assert: newAdded why equals: 'Asked in the review'
 ]
 
 { #category : 'tests' }
