@@ -319,6 +319,13 @@ CRReview >> unfiled [
 	^ changes reject: [ :each | filed includes: each ]
 ]
 
+{ #category : 'reviewing' }
+CRReview >> unmarkAllReviewed [
+	"Mark every part and change not reviewed"
+
+	self items do: [ :each | each reviewed: false ]
+]
+
 { #category : 'vocabulary' }
 CRReview >> vocabulary [
 	"The words of the names the code adds, and those the tests add, each a CRWordList. Computed once"

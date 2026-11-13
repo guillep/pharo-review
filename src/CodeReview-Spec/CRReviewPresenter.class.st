@@ -16,7 +16,8 @@ Class {
 		'tabs',
 		'item',
 		'pullRequest',
-		'markAllButton'
+		'markAllButton',
+		'unmarkAllButton'
 	],
 	#category : 'CodeReview-Spec',
 	#package : 'CodeReview-Spec'
@@ -55,6 +56,7 @@ CRReviewPresenter >> defaultLayout [
 		  add: (SpBoxLayout newTopToBottom
 				   add: (SpBoxLayout newLeftToRight
 						    addLast: markAllButton expand: false;
+						    addLast: unmarkAllButton expand: false;
 						    addLast: exportButton expand: false;
 						    yourself)
 				   expand: false;
@@ -141,6 +143,10 @@ CRReviewPresenter >> initializePresenters [
 		                 label: 'Mark all as reviewed';
 		                 action: [ self markAllReviewed ];
 		                 yourself.
+	unmarkAllButton := self newButton
+		                   label: 'Unmark all';
+		                   action: [ self unmarkAllReviewed ];
+		                   yourself.
 	exportButton := self newButton
 		                label: 'Export';
 		                action: [ self export ];
@@ -297,6 +303,21 @@ CRReviewPresenter >> tabs [
 CRReviewPresenter >> tree [
 
 	^ tree
+]
+
+{ #category : 'accessing' }
+CRReviewPresenter >> unmarkAllButton [
+
+	^ unmarkAllButton
+]
+
+{ #category : 'actions' }
+CRReviewPresenter >> unmarkAllReviewed [
+	"Mark every item not reviewed, and show the marks"
+
+	review unmarkAllReviewed.
+	tree refresh.
+	self show: tree selectedItem
 ]
 
 { #category : 'tree' }

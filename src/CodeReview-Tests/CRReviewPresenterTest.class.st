@@ -310,6 +310,16 @@ CRReviewPresenterTest >> testTheReviewedMarkAndTheNoteGoToTheItem [
 ]
 
 { #category : 'tests' }
+CRReviewPresenterTest >> testUnmarkAll [
+
+	presenter markAllButton click.
+	presenter unmarkAllButton click.
+	self
+		deny: part isReviewed;
+		deny: change isReviewed
+]
+
+{ #category : 'tests' }
 CRReviewPresenterTest >> testWordsSortByOccurrences [
 
 	| changes |
