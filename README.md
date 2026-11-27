@@ -98,4 +98,4 @@ Not yet: reshaping the tree in the tool, saving a review between sessions.
 
 ## Reviewing with an agent
 
-`.agents/skills/pharo-review/SKILL.md` tells a coding agent how to prepare a review with this tool: size the pull request, group its changes into a tree, open the tool, then work through the exported notes one at a time. It uses the Agent Skills format; `.claude/skills/pharo-review` links to the same folder. To use it in other projects, copy or link that folder into the agent's skills folder (for example `~/.claude/skills/` or `~/.agents/skills/`).
+`.agents/skills/pharo-review/SKILL.md` tells a coding agent how to prepare a review with this tool: group the changes of the pull request into a tree, open the tool, then work through the exported notes one at a time. It uses the Agent Skills format; `.claude/skills/pharo-review` links to the same folder. To use it in other projects, copy or link that folder into the agent's skills folder (for example `~/.claude/skills/` or `~/.agents/skills/`).

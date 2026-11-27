@@ -1,6 +1,6 @@
 ---
 name: pharo-review
-description: Use when the user wants to review a pull request or a branch of a Pharo project in a running image. Small pull requests are only reported; big ones are grouped into a tree of what they do and opened in the CodeReview tool, where the user reviews on their own and exports notes as Markdown that the agent then works through one at a time.
+description: Use when the user wants to review a pull request or a branch of a Pharo project in a running image. Its changes are grouped into a tree of what they do and opened in the CodeReview tool, where the user reviews on their own and exports notes as Markdown that the agent then works through one at a time.
 ---
 
 # Reviewing a Pharo pull request
@@ -17,19 +17,9 @@ Metacello new
 
 Give the review the pull request title (`review pullRequestTitle: '...'`, which names the window and the export) and its description, drafted or taken from GitHub (`review description: '...'`). The tool shows the description, editable, in its Pull request tab, and the Markdown export carries it under "Pull request description". Use the exported text as the pull request body, or to update an open one (`gh pr edit --body-file`).
 
-## 1. Size it
+## 1. Group the changes into a tree
 
-Count the lines added and removed between the base commit and the branch:
-`(CRReview repository: '<name>' from: '<base>' to: 'HEAD') lineCount`.
-
-- **Under 300 lines: small.** Say it is small, with the count, and wait for instructions. Do nothing else.
-- **300 or more: big.** Go on.
-
-The threshold is a starting point; the user refines it.
-
-## 2. Group the changes into a tree
-
-A big pull request usually does several things. Build a tree of them, top-down:
+A pull request often does several things. Build a tree of them, top-down:
 
 - **Parts:** each thing the pull request does, with a one-line summary of its purpose, in plain words. Split a part into sub-parts while it still does more than one thing.
 - **Changes** are the leaves: methods, class definitions and files, added, removed or changed, of any kind (code, tests, removals).
@@ -58,13 +48,13 @@ review checkComplete.  "no change outside the tree, no empty part"
 - Rename a part with `part name: '...'`; never call `setName:summary:` (it is the initializer and empties the part).
 - **Link moved code.** When code was moved or extracted (a removed method whose code reappears in an added one, a method split into several), link them: `(review changeNamed: 'New>>sel') movedFrom: (review changeNamed: 'Old>>sel')`. The tool then compares the new code with where it came from. Look for moves by comparing removed and changed methods with added ones; the reviewer should never have to ask "was this moved somewhere?".
 
-## 3. Open the tool
+## 2. Open the tool
 
 `review open` (refused while a change is unfiled or a part is empty). Tell the user it is open, in one line. Don't describe how the tree is split: they see it in the tool. Keep the review in a global (`Smalltalk at: #MyReview put: review`) so later scripts can change and reopen it.
 
 The user goes through the tree on their own: a Reviewed mark and a note on any item, parts and changes alike. If they ask to reshape the tree (merge, split, rename, move changes), change it with the API and reopen it.
 
-## 4. Act on the notes
+## 3. Act on the notes
 
 The user pastes the Markdown export (Export button).
 
@@ -78,6 +68,6 @@ After acting on the notes, the next review covers only the new commits:
 
 1. List the commits added since the commit the last review ended at (its title names it), with their messages.
 2. **Agree the list with the user explicitly** before building anything: they may add, drop or regroup commits.
-3. Build a review of that range only (`CRReview repository: … from: <last reviewed commit> to: <last agreed commit>`), grouped as usual (small ones are still just reported), and open it.
+3. Build a review of that range only (`CRReview repository: … from: <last reviewed commit> to: <last agreed commit>`), grouped as usual, and open it.
 
 If the history before that commit was rewritten (rebase, fixup), say so and agree with the user on the commit to start from.
